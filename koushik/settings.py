@@ -93,10 +93,12 @@ if os.environ.get('MYSQL_HOST'):
         pass
 
 if 'default' not in locals().get('DATABASES', {}):
+    import platform
+    DB_PATH = '/tmp/db.sqlite3' if platform.system() == 'Linux' else BASE_DIR / 'db.sqlite3'
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': '/tmp/db.sqlite3',
+            'NAME': DB_PATH,
         }
     }
 
