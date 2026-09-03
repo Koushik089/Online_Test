@@ -103,26 +103,16 @@ def signup(request):
         user = User.objects.create_user(username=username, email=email, password=password)
         user.first_name = username
         user.save()
-        send_mail(
+        try:
+            send_mail(
                 subject='Registration Successful - Online Exam System',
-                message=f'''
-            Hello {username},
-
-            Your registration was successful.
-
-            Welcome to Online Exam System!
-
-            Your account has been successfully created.
-
-            You can now log in and take your exams.
-
-            Regards,
-            Online Exam System
-            ''',
+                message=f'Hello {username}, your account has been created. You can now log in and take your exams.',
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[email],
-                fail_silently=False,
+                fail_silently=True,
             )
+        except Exception:
+            pass
 
         # UserProfile is created automatically by our receiver signal in models.py
         messages.success(request, "Account created successfully! Please log in.")
