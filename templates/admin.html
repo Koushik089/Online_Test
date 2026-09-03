@@ -1,0 +1,58 @@
+<!-- templates/teacher_login.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login Options</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .login-container {
+      background: white;
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+    h2 {
+      margin-bottom: 20px;
+    }
+    .login-btn {
+      padding: 10px 30px;
+      margin: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      background-color: #4a90e2;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+      box-shadow: 0 2px 6px rgba(74, 144, 226, 0.15);
+    }
+    .login-btn:hover {
+      background-color: #357ab8;
+      transform: translateY(-2px) scale(1.05);
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h2>Select Login Type</h2>
+    <a href="{% url 'admin_dashboard' %}">
+      <button class="login-btn">Teacher Login</button>
+    </a>
+
+    <div class="text-center">
+      <p class="text-sm mt-4 mb-2">Are you a student?</p>
+      <a href="{% url 'student_login' %}" class="text-green-600 hover:underline font-semibold">Go to Student Login</a>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,200 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Voting Results - Online Voting System</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="{% static 'style.css' %}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    }
+  </script>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans min-h-screen relative flex flex-col justify-between overflow-x-hidden selection:bg-blue-700 selection:text-white">
+
+  <!-- Auras -->
+  <div class="absolute top-[-15%] left-[-15%] w-[60%] h-[60%] rounded-full bg-blue-700/10 blur-[130px] pointer-events-none animate-pulse-slow"></div>
+  <div class="absolute bottom-[-15%] right-[-15%] w-[60%] h-[60%] rounded-full bg-blue-700/5 blur-[130px] pointer-events-none animate-pulse-slow"></div>
+
+  <!-- Header -->
+  <header class="glass-navbar sticky top-0 w-full z-50">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <a href="{% url 'voting_dashboard' %}" class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-700 to-blue-600 flex items-center justify-center text-white shadow-lg">
+          <i class="fa-solid fa-square-poll-vertical"></i>
+        </a>
+        <span class="font-display font-extrabold text-2xl tracking-tight bg-gradient-to-r from-blue-900 via-blue-700 to-blue-600 bg-clip-text text-transparent">Online Exam System - Voting</span>
+      </div>
+      
+      <div class="flex items-center gap-4">
+        <button id="themeToggle" class="theme-toggle-btn w-9 h-9" aria-label="Toggle Theme">
+          <i class="fa-solid fa-sun text-sm block dark:hidden"></i>
+          <i class="fa-solid fa-moon text-sm hidden dark:block"></i>
+        </button>
+        <a href="{% url 'voting_dashboard' %}" class="btn-secondary text-xs py-2 px-4"><i class="fa-solid fa-arrow-left mr-1"></i> Back to Dashboard</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-grow max-w-5xl w-full mx-auto py-12 px-6 z-10 space-y-8">
+    
+    <!-- Title -->
+    <div class="text-center space-y-2">
+      <h1 class="text-3xl font-extrabold text-white font-display">{{ poll.title }} - Live Results</h1>
+      <p class="text-xs text-gray-500">Real-time voting metrics and statistics dashboard.</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      
+      <!-- Stats / Percentages (Col 5) -->
+      <div class="lg:col-span-5 space-y-6">
+        
+        <!-- Total Votes Card -->
+        <div class="glass-card p-6 border-blue-500/10 glow-border text-center space-y-2">
+          <div class="text-gray-500 text-[10px] font-bold uppercase tracking-wider">Total Ballots Cast</div>
+          <div class="text-4xl font-extrabold text-white font-display animate-pulse">{{ total_votes }}</div>
+          <div class="text-[10px] text-blue-400 font-semibold"><i class="fa-solid fa-lock"></i> Verified Safe</div>
+        </div>
+
+        <!-- Standings -->
+        <div class="glass-card p-6 border-white/5 space-y-4">
+          <h3 class="text-sm font-bold text-white uppercase tracking-wider border-b border-white/5 pb-2">Election Standings</h3>
+          <div class="space-y-4">
+            {% for candidate in candidates %}
+              <div class="space-y-1">
+                <div class="flex justify-between text-xs font-semibold">
+                  <span class="text-gray-300">{{ candidate.name }}</span>
+                  <span class="text-blue-400">{{ candidate.votes_count }} votes</span>
+                </div>
+                <!-- Percentage Progress bar -->
+                <div class="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                  <div class="bg-gradient-to-r from-blue-700 to-blue-600 h-full rounded-full" 
+                       style="width: {% if total_votes > 0 %}{{ candidate.votes_count|dictsortreversed:total_votes }}{% else %}0{% endif %}%"></div>
+                </div>
+              </div>
+            {% empty %}
+              <p class="text-xs text-gray-500">No candidates available.</p>
+            {% endfor %}
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Chart Display (Col 7) -->
+      <div class="lg:col-span-7">
+        <div class="glass-card p-6 border-white/5 h-full flex flex-col justify-center">
+          <h3 class="text-sm font-bold text-white uppercase tracking-wider border-b border-white/5 pb-4 mb-4">Results Visualization</h3>
+          <div class="relative w-full h-[300px]">
+            <canvas id="resultsChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="glass-navbar py-8 px-6 text-center text-xs text-gray-500 relative z-10">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+      <p>© 2026 Online Voting Portal. Secure & Transparent.</p>
+      <a href="{% url 'voting_dashboard' %}" class="hover:underline hover:text-blue-400">Back to Dashboard</a>
+    </div>
+  </footer>
+
+  <!-- Chart script -->
+  <script>
+    const labels = {{ labels|safe }};
+    const votes = {{ votes|safe }};
+    
+    // Check dark vs light theme context to toggle grid/ticks colors
+    const isLightTheme = document.documentElement.classList.contains('light');
+    const textPrimaryColor = isLightTheme ? '#0f172a' : '#f3f4f6';
+    const gridColor = isLightTheme ? '#e2e8f0' : 'rgba(255, 255, 255, 0.05)';
+
+    const ctx = document.getElementById('resultsChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Votes received',
+          data: votes,
+          backgroundColor: 'rgba(99, 102, 241, 0.75)',
+          borderColor: '#2563EB',
+          borderWidth: 2,
+          borderRadius: 8,
+          hoverBackgroundColor: 'rgba(168, 85, 247, 0.85)',
+          hoverBorderColor: '#1D4ED8',
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          }
+        },
+        scales: {
+          x: {
+            grid: {
+              color: gridColor
+            },
+            ticks: {
+              color: textPrimaryColor,
+              font: {
+                family: 'Outfit',
+                weight: 'bold'
+              }
+            }
+          },
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: gridColor
+            },
+            ticks: {
+              color: textPrimaryColor,
+              precision: 0,
+              font: {
+                family: 'Inter'
+              }
+            }
+          }
+        }
+      }
+    });
+    const themeToggleBtn = document.getElementById('themeToggle');
+    const htmlElement = document.documentElement;
+    function applyTheme(t) {
+      if (t === 'dark') {
+        htmlElement.setAttribute('data-theme', 'dark');
+        htmlElement.classList.add('dark');
+        htmlElement.classList.remove('light');
+      } else {
+        htmlElement.setAttribute('data-theme', 'light');
+        htmlElement.classList.add('light');
+        htmlElement.classList.remove('dark');
+      }
+    }
+    const stored = localStorage.getItem('theme') || 'light';
+    applyTheme(stored);
+    if (themeToggleBtn) {
+      themeToggleBtn.addEventListener('click', () => {
+        const next = htmlElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('theme', next);
+        applyTheme(next);
+      });
+    }
+  </script>
+</body>
+</html>

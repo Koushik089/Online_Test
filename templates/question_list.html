@@ -1,0 +1,66 @@
+{% load static %}
+<div class="glass-card p-6">
+  <div class="flex justify-between items-center mb-4">
+    <h3 class="font-bold">Question Bank</h3>
+    <a href="{% url 'question_create' %}" class="btn-primary">Add Question</a>
+  </div>
+
+  <form method="get" class="flex gap-2 mb-4">
+    <input type="text" name="q" value="{{ q_query }}" placeholder="Search text or tags" class="glass-input" />
+    <select name="subject" class="glass-input">
+      <option value="">All Subjects</option>
+      <option value="dbms" {% if subject_filter == 'dbms' %}selected{% endif %}>DBMS</option>
+      <option value="computer_network" {% if subject_filter == 'computer_network' %}selected{% endif %}>Computer Networks</option>
+      <option value="operating_system" {% if subject_filter == 'operating_system' %}selected{% endif %}>Operating Systems</option>
+    </select>
+    <select name="difficulty" class="glass-input">
+      <option value="">All Difficulties</option>
+      <option value="easy" {% if difficulty_filter == 'easy' %}selected{% endif %}>Easy</option>
+      <option value="medium" {% if difficulty_filter == 'medium' %}selected{% endif %}>Medium</option>
+      <option value="hard" {% if difficulty_filter == 'hard' %}selected{% endif %}>Hard</option>
+    </select>
+    <button class="btn-secondary" type="submit">Filter</button>
+  </form>
+
+  <div class="overflow-auto">
+    <table class="w-full text-sm">
+      <thead class="text-left text-gray-400 text-xs">
+        <tr>
+          <th>#</th>
+          <th>Subject</th>
+          <th>Question</th>
+          <th>Marks</th>
+          <th>Difficulty</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for q in questions %}
+        <tr class="border-t border-white/5">
+          <td class="py-2">{{ forloop.counter0|add:questions.start_index }}</td>
+          <td class="py-2">{{ q.subject|upper }}</td>
+          <td class="py-2">{{ q.question_text|truncatechars:80 }}</td>
+          <td class="py-2">{{ q.marks }}</td>
+          <td class="py-2">{{ q.difficulty }}</td>
+          <td class="py-2">
+            <a href="{% url 'question_edit' q.id %}" class="text-indigo-400">Edit</a>
+            <a href="{% url 'question_delete' q.id %}" class="text-rose-400 ml-3">Delete</a>
+          </td>
+        </tr>
+        {% empty %}
+          <tr><td colspan="6" class="py-4 text-gray-400">No questions found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mt-4">
+    {% if questions.has_previous %}
+      <a href="?page={{ questions.previous_page_number }}&q={{ q_query }}&subject={{ subject_filter }}&difficulty={{ difficulty_filter }}" class="btn-secondary">Prev</a>
+    {% endif %}
+    <span class="px-2">Page {{ questions.number }} of {{ questions.paginator.num_pages }}</span>
+    {% if questions.has_next %}
+      <a href="?page={{ questions.next_page_number }}&q={{ q_query }}&subject={{ subject_filter }}&difficulty={{ difficulty_filter }}" class="btn-secondary">Next</a>
+    {% endif %}
+  </div>
+</div>

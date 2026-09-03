@@ -1,0 +1,109 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Submission Confirmed - Online Exam System</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="{% static 'style.css' %}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    }
+  </script>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans min-h-screen relative flex items-center justify-center p-4 overflow-hidden selection:bg-blue-700 selection:text-white">
+
+  <!-- Auras -->
+  <div class="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-blue-700/5 blur-[130px] pointer-events-none"></div>
+  <div class="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-slate-300/5 blur-[130px] pointer-events-none"></div>
+
+  <!-- Container -->
+  <div class="w-full max-w-md z-10 space-y-6">
+    
+    <div class="flex justify-between items-center px-2">
+      <span class="text-xs text-blue-700 font-bold uppercase tracking-widest"><i class="fa-solid fa-lock mr-1"></i> Secure Connection</span>
+      
+      <button id="themeToggle" class="theme-toggle-btn w-9 h-9" aria-label="Toggle Theme">
+        <i class="fa-solid fa-sun text-sm block dark:hidden"></i>
+        <i class="fa-solid fa-moon text-sm hidden dark:block"></i>
+      </button>
+    </div>
+
+    <!-- Success Card -->
+    <div class="glass-card p-8 glow-border text-center space-y-6">
+      
+      <div class="relative inline-block">
+        <div class="w-20 h-20 rounded-full bg-blue-500/10 border border-blue-400/20 flex items-center justify-center text-blue-300 mx-auto animate-bounce">
+          <i class="fa-solid fa-circle-check text-4xl"></i>
+        </div>
+        <div class="absolute inset-0 w-20 h-20 bg-blue-500/10 rounded-full blur-xl mx-auto -z-10"></div>
+      </div>
+
+      <div class="space-y-2">
+        <h1 class="text-3xl font-extrabold font-display text-white">Exam Submitted</h1>
+        <p class="text-xs text-gray-400">Your answers were successfully saved to our secure database servers.</p>
+      </div>
+
+      <div class="bg-white/5 border border-white/5 rounded-xl p-4 text-xs text-gray-400 text-left space-y-2">
+        <div class="flex justify-between">
+          <span>Submission Status</span>
+          <span class="text-emerald-400 font-bold">SUCCESS</span>
+        </div>
+        <div class="flex justify-between border-t border-white/5 pt-2">
+          <span>Captured IP</span>
+          <span class="text-gray-300 font-semibold">127.0.0.1 (Localhost)</span>
+        </div>
+        <div class="flex justify-between border-t border-white/5 pt-2">
+          <span>Proctoring Warnings</span>
+          <span class="text-emerald-400 font-semibold">0 Detected</span>
+        </div>
+      </div>
+
+      <div class="pt-2">
+        <a href="{% url 'hero' %}" class="btn-primary w-full py-3">
+          Return to Dashboard
+          <i class="fa-solid fa-circle-chevron-right ml-1"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Theme Controller
+    const themeToggleBtn = document.getElementById('themeToggle');
+    const htmlElement = document.documentElement;
+    
+    const storedTheme = localStorage.getItem('theme') || 'light';
+    if (storedTheme === 'light') {
+      htmlElement.setAttribute('data-theme', 'light');
+      htmlElement.classList.add('light');
+      document.body.classList.add('bg-slate-50', 'text-slate-900');
+      document.body.classList.remove('bg-[#111827]', 'text-gray-100');
+    } else {
+      htmlElement.setAttribute('data-theme', 'dark');
+      htmlElement.classList.remove('light');
+    }
+    themeToggleBtn.addEventListener('click', () => {
+      const currentTheme = htmlElement.getAttribute('data-theme');
+      if (currentTheme === 'dark') {
+        htmlElement.setAttribute('data-theme', 'light');
+        htmlElement.classList.add('light');
+        localStorage.setItem('theme', 'light');
+        document.body.classList.add('bg-slate-50', 'text-slate-900');
+        document.body.classList.remove('bg-[#111827]', 'text-gray-100');
+      } else {
+        htmlElement.setAttribute('data-theme', 'dark');
+        htmlElement.classList.remove('light');
+        localStorage.setItem('theme', 'light');
+        document.body.classList.add('bg-[#111827]', 'text-gray-100');
+        document.body.classList.remove('bg-slate-50', 'text-slate-900');
+      }
+    });
+  </script>
+</body>
+</html>

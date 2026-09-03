@@ -1,0 +1,144 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cast Vote - Online Voting System</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="{% static 'style.css' %}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    }
+  </script>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans min-h-screen relative flex flex-col justify-between overflow-x-hidden selection:bg-blue-700 selection:text-white">
+
+  <!-- Auras -->
+  <div class="absolute top-[-15%] left-[-15%] w-[60%] h-[60%] rounded-full bg-blue-700/10 blur-[130px] pointer-events-none animate-pulse-slow"></div>
+  <div class="absolute bottom-[-15%] right-[-15%] w-[60%] h-[60%] rounded-full bg-blue-700/5 blur-[130px] pointer-events-none animate-pulse-slow"></div>
+
+  <!-- Header -->
+  <header class="glass-navbar sticky top-0 w-full z-50">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <a href="{% url 'voting_dashboard' %}" class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-700 to-blue-600 flex items-center justify-center text-white shadow-lg">
+          <i class="fa-solid fa-check-to-slot"></i>
+        </a>
+        <span class="font-display font-extrabold text-2xl tracking-tight bg-gradient-to-r from-blue-900 via-blue-700 to-blue-600 bg-clip-text text-transparent">Online Exam System - Voting</span>
+      </div>
+      
+      <div class="flex items-center gap-4">
+        <button id="themeToggle" class="theme-toggle-btn w-9 h-9" aria-label="Toggle Theme">
+          <i class="fa-solid fa-sun text-sm block dark:hidden"></i>
+          <i class="fa-solid fa-moon text-sm hidden dark:block"></i>
+        </button>
+        <a href="{% url 'voting_dashboard' %}" class="btn-secondary text-xs py-2 px-4"><i class="fa-solid fa-arrow-left mr-1"></i> Back to Dashboard</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-grow flex items-center justify-center py-12 px-6 z-10">
+    <div class="max-w-xl w-full">
+      <div class="glass-card p-8 space-y-8 glow-border relative overflow-hidden">
+        <div class="absolute -right-12 -top-12 w-28 h-28 bg-blue-700/15 rounded-full blur-2xl"></div>
+        
+        <div class="text-center space-y-2">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-700/10 border border-blue-700/20 text-blue-400 text-xs font-semibold uppercase tracking-wider">
+            <i class="fa-solid fa-circle-check"></i> Secure Election Ballot
+          </div>
+          <h1 class="text-3xl font-extrabold text-white font-display">{{ poll.title }}</h1>
+          <p class="text-xs text-gray-500">{{ poll.description }}</p>
+        </div>
+
+        {% if existing_vote %}
+          <!-- Already Voted Warning -->
+          <div class="bg-blue-700/10 border border-blue-700/20 p-6 rounded-2xl text-center space-y-4">
+            <i class="fa-solid fa-circle-check text-4xl text-emerald-400 animate-bounce"></i>
+            <h2 class="text-lg font-bold text-white">Your Ballot Has Been Submitted</h2>
+            <p class="text-xs text-gray-400">You voted for <span class="text-blue-400 font-bold">{{ existing_vote.candidate.name }}</span> in this election on {{ existing_vote.timestamp|date:"d M Y, H:i" }}. Double-voting is strictly blocked.</p>
+            <a href="{% url 'voting_results' poll.id %}" class="btn-primary text-xs w-full py-2.5">
+              View Real-time Results
+            </a>
+          </div>
+        {% else %}
+          <!-- Vote Form -->
+          <form method="POST" action="{% url 'cast_vote' poll.id %}" class="space-y-6">
+            {% csrf_token %}
+            
+            <div class="space-y-3">
+              <label class="text-xs font-bold text-gray-400 uppercase tracking-wider block">Choose a Candidate</label>
+              
+              {% for candidate in candidates %}
+                <label class="block cursor-pointer group">
+                  <input type="radio" name="candidate" value="{{ candidate.id }}" class="sr-only peer" required>
+                  <div class="border border-white/5 bg-white/5 hover:bg-white/10 p-5 rounded-2xl transition duration-200 flex flex-col gap-2
+                              peer-checked:border-blue-500 peer-checked:bg-blue-700/10 peer-checked:shadow-lg peer-checked:shadow-blue-500/5">
+                    <div class="flex items-center gap-3">
+                      <span class="w-5 h-5 rounded-full border border-white/10 flex items-center justify-center text-xs text-gray-500 group-hover:border-blue-400 peer-checked:border-blue-500 transition">
+                        <span class="w-2.5 h-2.5 bg-blue-500 rounded-full scale-0 peer-checked:scale-100 transition duration-200"></span>
+                      </span>
+                      <span class="font-bold text-white group-hover:text-blue-400 transition">{{ candidate.name }}</span>
+                    </div>
+                    {% if candidate.biography %}
+                      <p class="text-xs text-gray-500 pl-8 leading-relaxed">{{ candidate.biography }}</p>
+                    {% endif %}
+                  </div>
+                </label>
+              {% endfor %}
+            </div>
+
+            <!-- Warning Notice -->
+            <div class="text-[10px] text-gray-500 flex items-center gap-2 pl-1">
+              <i class="fa-solid fa-shield-halved text-blue-500"></i>
+              <span>Your vote is completely encrypted and anonymous. You can only vote once.</span>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn-primary w-full py-3.5 bg-gradient-to-tr from-blue-700 to-blue-600 shadow-emerald-500/10">
+              <i class="fa-solid fa-vote-yea mr-2"></i>
+              Cast Vote Ballot
+            </button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="glass-navbar py-8 px-6 text-center text-xs text-gray-500 relative z-10">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+      <p>© 2026 Online Voting Portal. Secure & Transparent.</p>
+      <a href="{% url 'voting_dashboard' %}" class="hover:underline hover:text-blue-400">Back to Dashboard</a>
+    </div>
+  <script>
+    const themeToggleBtn = document.getElementById('themeToggle');
+    const htmlElement = document.documentElement;
+    function applyTheme(t) {
+      if (t === 'dark') {
+        htmlElement.setAttribute('data-theme', 'dark');
+        htmlElement.classList.add('dark');
+        htmlElement.classList.remove('light');
+      } else {
+        htmlElement.setAttribute('data-theme', 'light');
+        htmlElement.classList.add('light');
+        htmlElement.classList.remove('dark');
+      }
+    }
+    const stored = localStorage.getItem('theme') || 'light';
+    applyTheme(stored);
+    if (themeToggleBtn) {
+      themeToggleBtn.addEventListener('click', () => {
+        const next = htmlElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('theme', next);
+        applyTheme(next);
+      });
+    }
+  </script>
+</body>
+</html>

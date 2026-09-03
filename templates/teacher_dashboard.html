@@ -1,0 +1,286 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Teacher Analytics & Dashboard</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="{% static 'style.css' %}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    }
+  </script>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans min-h-screen relative flex flex-col justify-between overflow-x-hidden selection:bg-blue-700 selection:text-white">
+
+  <!-- Auras -->
+  <div class="absolute top-[-15%] left-[-15%] w-[60%] h-[60%] rounded-full bg-blue-700/5 blur-[130px] pointer-events-none animate-pulse-slow"></div>
+  <div class="absolute bottom-[-15%] right-[-15%] w-[60%] h-[60%] rounded-full bg-slate-300/5 blur-[130px] pointer-events-none animate-pulse-slow"></div>
+
+  <!-- Header -->
+  <header class="glass-navbar sticky top-0 w-full z-50">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <a href="{% url 'hero' %}" class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg">
+          <i class="fa-solid fa-graduation-cap text-lg"></i>
+        </a>
+        <span class="font-display font-extrabold text-2xl tracking-tight bg-gradient-to-r from-indigo-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">Teacher Admin</span>
+      </div>
+      
+      <div class="flex items-center gap-4 text-xs font-semibold">
+        <button id="themeToggle" class="theme-toggle-btn w-9 h-9" aria-label="Toggle Theme">
+          <i class="fa-solid fa-sun text-sm block dark:hidden"></i>
+          <i class="fa-solid fa-moon text-sm hidden dark:block"></i>
+        </button>
+        <a href="{% url 'question_list' %}" class="hover:text-indigo-400 transition"><i class="fa-solid fa-list mr-1"></i> Questions Bank</a>
+        <span class="text-slate-300 dark:text-white/10">|</span>
+        <a href="{% url 'admin_polls' %}" class="hover:text-indigo-400 transition"><i class="fa-solid fa-check-to-slot mr-1"></i> Manage Polls</a>
+        <span class="text-slate-300 dark:text-white/10">|</span>
+        <a href="{% url 'hero' %}" class="btn-secondary py-2 px-4"><i class="fa-solid fa-arrow-left mr-1"></i> Student Portal</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-grow max-w-7xl w-full mx-auto py-12 px-6 z-10 space-y-8">
+    
+    <!-- Title -->
+    <div class="space-y-2">
+      <h1 class="text-3xl font-extrabold text-white font-display">Teacher Analytics Dashboard</h1>
+      <p class="text-xs text-gray-500">Monitor student performance metrics, bulk-generate AI question banks, and export assessment CSV files.</p>
+    </div>
+
+    <!-- Django Messages -->
+    {% if messages %}
+      <div class="space-y-2">
+        {% for message in messages %}
+          <div class="p-4 rounded-xl border text-xs sm:text-sm font-semibold bg-emerald-500/10 border-emerald-500/20 text-emerald-400 flex items-center gap-3">
+            <i class="fa-solid fa-circle-check text-lg"></i>
+            <span>{{ message }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <!-- Grid Overview -->
+    <section class="grid grid-cols-1 md:grid-cols-4 gap-6">
+      
+      <div class="glass-card p-6 border-white/5 space-y-2 flex flex-col justify-center">
+        <span class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Total Questions Bank</span>
+        <div class="text-3xl font-extrabold text-white font-display">{{ total_questions }}</div>
+        <a href="{% url 'question_list' %}" class="text-[10px] text-indigo-400 font-semibold hover:underline">View Questions Table <i class="fa-solid fa-arrow-right ml-1"></i></a>
+      </div>
+
+      <div class="glass-card p-6 border-white/5 space-y-2 flex flex-col justify-center">
+        <span class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Total Completed Exams</span>
+        <div class="text-3xl font-extrabold text-white font-display">{{ total_attempts }}</div>
+        <span class="text-[10px] text-emerald-400 font-semibold"><i class="fa-solid fa-chart-line mr-1"></i> Activity Normal</span>
+      </div>
+
+      <!-- Export Card -->
+      <div class="glass-card p-6 border-white/5 space-y-3 flex flex-col justify-center">
+        <span class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Data Utilities</span>
+        <div class="flex flex-wrap gap-2">
+          <a href="{% url 'export_results_csv' %}?subject=all" class="btn-primary py-2 px-3 text-[10px] bg-gradient-to-tr from-emerald-500 to-teal-600 shadow-emerald-500/10">
+            <i class="fa-solid fa-file-csv mr-1"></i> Export CSV
+          </a>
+        </div>
+      </div>
+
+      <!-- CSV Bulk Import Form -->
+      <div class="glass-card p-6 border-white/5 space-y-2 flex flex-col justify-center">
+        <span class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Import Questions CSV</span>
+        <form action="{% url 'import_questions_csv' %}" method="POST" enctype="multipart/form-data" class="flex gap-2">
+          {% csrf_token %}
+          <input type="file" name="csv_file" required class="text-[10px] text-gray-400 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[10px] file:font-semibold file:bg-indigo-500/10 file:text-indigo-400 hover:file:bg-indigo-500/20">
+          <button type="submit" class="btn-secondary py-1 px-2.5 text-[10px] border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10">Upload</button>
+        </form>
+      </div>
+
+    </section>
+
+    <!-- Mid Section: Analytics & AI Bulk Generator -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      
+      <!-- Chart Analytics (Col 7) -->
+      <section class="lg:col-span-7 space-y-4">
+        <div class="glass-card p-6 border-white/5">
+          <h2 class="text-sm font-bold text-white uppercase tracking-wider border-b border-white/5 pb-3 mb-4">Average Response Time by Subject (seconds)</h2>
+          <div class="relative w-full h-[320px]">
+            <canvas id="timingChart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- AI Question Paper Generator Card (Col 5) -->
+      <section class="lg:col-span-5 space-y-4">
+        <div class="glass-card p-6 border-pink-500/20 glow-border relative overflow-hidden h-full">
+          <div class="absolute -right-8 -top-8 w-20 h-20 bg-pink-500/5 rounded-full blur-xl"></div>
+          
+          <h2 class="text-sm font-bold text-white uppercase tracking-wider border-b border-white/5 pb-3 mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-wand-magic-sparkles text-pink-400 animate-pulse"></i>
+            Bulk AI Question Generator
+          </h2>
+
+          <form action="{% url 'teacher_ai_generate' %}" method="POST" class="space-y-4">
+            {% csrf_token %}
+            
+            <div class="space-y-1">
+              <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Target Subject</label>
+              <select name="subject" class="w-full glass-input bg-[#111827] border-white/5 py-2.5 px-3 text-xs rounded-lg text-gray-300">
+                <option value="computer_network">Computer Networks</option>
+                <option value="dbms">DBMS</option>
+                <option value="operating_system">Operating Systems</option>
+              </select>
+            </div>
+
+            <div class="space-y-1">
+              <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Question Difficulty</label>
+              <select name="difficulty" class="w-full glass-input bg-[#111827] border-white/5 py-2.5 px-3 text-xs rounded-lg text-gray-300">
+                <option value="easy">Easy</option>
+                <option value="medium" selected>Medium</option>
+                <option value="hard">Hard</option>
+              </select>
+            </div>
+
+            <div class="space-y-1">
+              <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Topic / Concept Keywords</label>
+              <input type="text" name="topic" placeholder="e.g. Subnetting, Relational algebra, Threads" required class="w-full glass-input bg-[#111827] border-white/5 py-2.5 px-3 text-xs rounded-lg text-gray-300 placeholder-gray-600">
+            </div>
+
+            <div class="space-y-1">
+              <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Question Volume</label>
+              <select name="count" class="w-full glass-input bg-[#111827] border-white/5 py-2.5 px-3 text-xs rounded-lg text-gray-300">
+                <option value="5" selected>Generate 5 Questions</option>
+                <option value="10">Generate 10 Questions</option>
+                <option value="20">Generate 20 Questions</option>
+              </select>
+            </div>
+
+            <button type="submit" class="btn-primary w-full py-2.5 text-xs bg-gradient-to-r from-pink-500 to-purple-600 shadow-pink-500/10">
+              <i class="fa-solid fa-cogs mr-1"></i> Run AI Generation Pipeline
+            </button>
+          </form>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Bottom Section: Recent Attempts Table -->
+    <section class="glass-card p-6 border-white/5">
+      <h2 class="text-sm font-bold text-white uppercase tracking-wider border-b border-white/5 pb-3 mb-4">Recent Candidate Attempts (Last 20)</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs text-left border-collapse">
+          <thead>
+            <tr class="border-b border-white/5 bg-white/5 font-bold uppercase tracking-wider text-gray-400">
+              <th class="p-3">Candidate</th>
+              <th class="p-3">Subject Type</th>
+              <th class="p-3">Obtained Score</th>
+              <th class="p-3">Percentage</th>
+              <th class="p-3">Completed At</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-white/5 text-gray-300">
+            {% for s in student_sessions|slice:":20" %}
+              <tr class="hover:bg-white/5 transition-colors">
+                <td class="p-3 font-semibold text-white">{{ s.user.username }}</td>
+                <td class="p-3 uppercase">{{ s.subject|upper }}</td>
+                <td class="p-3 font-semibold text-indigo-400">{{ s.score }} / {{ s.total_questions }}</td>
+                <td class="p-3 font-bold {% if s.passed %}text-emerald-400{% else %}text-rose-400{% endif %}">{{ s.percentage }}%</td>
+                <td class="p-3 text-gray-500">{{ s.updated_at|date:"d M Y, H:i" }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="5" class="p-8 text-center text-gray-500">
+                  <i class="fa-solid fa-clipboard-question text-3xl mb-3 text-gray-600 block"></i>
+                  No candidate exam logs logged yet.
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="glass-navbar py-8 px-6 text-center text-xs text-gray-500 relative z-10">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+      <p>© 2026 Online Exam System. Designed for Academic Integrity.</p>
+      <a href="{% url 'hero' %}" class="hover:underline hover:text-indigo-400">Student Portal</a>
+    </div>
+  </footer>
+
+  <script>
+    const labels = {{ timing_labels|safe }};
+    const values = {{ timing_values|safe }};
+    
+    const isLightTheme = document.documentElement.classList.contains('light');
+    const textPrimaryColor = isLightTheme ? '#0f172a' : '#f3f4f6';
+    const gridColor = isLightTheme ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)';
+
+    const ctx = document.getElementById('timingChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Avg Response Time (seconds)',
+          data: values,
+          backgroundColor: 'rgba(99, 102, 241, 0.75)',
+          borderColor: '#6366f1',
+          borderWidth: 2,
+          borderRadius: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          x: {
+            grid: { color: gridColor },
+            ticks: { color: textPrimaryColor, font: { family: 'Outfit', weight: 'bold' } }
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: gridColor },
+            ticks: { color: textPrimaryColor, font: { family: 'Inter' } }
+          }
+        }
+      }
+    });
+    const themeToggleBtn = document.getElementById('themeToggle');
+    const htmlElement = document.documentElement;
+    function applyTheme(t) {
+      if (t === 'dark') {
+        htmlElement.setAttribute('data-theme', 'dark');
+        htmlElement.classList.add('dark');
+        htmlElement.classList.remove('light');
+      } else {
+        htmlElement.setAttribute('data-theme', 'light');
+        htmlElement.classList.add('light');
+        htmlElement.classList.remove('dark');
+      }
+    }
+    const stored = localStorage.getItem('theme') || 'light';
+    applyTheme(stored);
+    if (themeToggleBtn) {
+      themeToggleBtn.addEventListener('click', () => {
+        const next = htmlElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('theme', next);
+        applyTheme(next);
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,122 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Take Exam - Online Exam System</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="{% static 'style.css' %}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    }
+  </script>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans min-h-screen relative flex items-center justify-center p-4 overflow-hidden selection:bg-blue-700 selection:text-white">
+
+  <!-- Auras -->
+  <div class="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-blue-700/5 blur-[130px] pointer-events-none"></div>
+  <div class="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-slate-300/5 blur-[130px] pointer-events-none"></div>
+
+  <!-- Container -->
+  <div class="w-full max-w-xl z-10 space-y-6 animate-float">
+    
+    <div class="flex justify-between items-center px-2">
+      <a href="{% url 'subject_choice' %}" class="flex items-center gap-2 group">
+        <i class="fa-solid fa-arrow-left-long text-gray-400 group-hover:text-blue-400 group-hover:-translate-x-1 transition duration-200"></i>
+        <span class="text-xs text-gray-400 group-hover:text-blue-400 transition font-semibold">Change Subject</span>
+      </a>
+      
+      <button id="themeToggle" class="theme-toggle-btn w-9 h-9" aria-label="Toggle Theme">
+        <i class="fa-solid fa-sun text-sm block dark:hidden"></i>
+        <i class="fa-solid fa-moon text-sm hidden dark:block"></i>
+      </button>
+    </div>
+
+    <!-- Instruction Card -->
+    <div class="glass-card p-8 glow-border space-y-6">
+      
+      <div class="text-center space-y-2">
+        <div class="w-16 h-16 rounded-full bg-blue-700/10 border border-blue-700/20 flex items-center justify-center text-blue-400 mx-auto">
+          <i class="fa-solid fa-clipboard-question text-2xl"></i>
+        </div>
+        <h1 class="text-3xl font-extrabold font-display text-white mt-4">Pre-Exam Instructions</h1>
+        <p class="text-xs text-gray-400">Please review all rules before starting the assessment paper.</p>
+      </div>
+
+      <!-- Guidelines Container -->
+      <div class="bg-blue-700/5 border border-blue-700/15 rounded-xl p-5 text-xs text-blue-300 space-y-3">
+        <h3 class="font-bold uppercase tracking-wider text-white flex items-center gap-2">
+          <i class="fa-solid fa-triangle-exclamation text-yellow-500"></i> Proctoring Requirements
+        </h3>
+        
+        <ul class="space-y-2.5 pl-1">
+          <li class="flex items-start gap-2">
+            <i class="fa-regular fa-circle-check text-blue-400 mt-0.5"></i>
+            <span>**Fullscreen Enforced**: Pressing ESC or exiting fullscreen logs a violation. Exceeding limit results in auto-submission.</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <i class="fa-regular fa-circle-check text-blue-400 mt-0.5"></i>
+            <span>**Tab Lockout**: Do not switch tabs, open developers tools, or minimize browser window. Warn count triggers at 3.</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <i class="fa-regular fa-circle-check text-blue-400 mt-0.5"></i>
+            <span>**Auto-Save & Submit**: Answers auto-save to database. Once timer ends, the paper submits automatically.</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <i class="fa-regular fa-circle-check text-blue-400 mt-0.5"></i>
+            <span>**Mouse/Key Disablers**: Copying question content or right-clicking is strictly blocked.</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Start Button trigger -->
+      <div class="pt-2 text-center">
+        <!-- We use the standard URL, which in the user's project can be mapped to subject exam papers -->
+        <a href="{% url 'subject_choice' %}" class="btn-primary w-full py-3.5 text-center flex justify-center items-center gap-2">
+          Proceed to Exam Room
+          <i class="fa-solid fa-right-to-bracket"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Theme Controller
+    const themeToggleBtn = document.getElementById('themeToggle');
+    const htmlElement = document.documentElement;
+    
+    const storedTheme = localStorage.getItem('theme') || 'light';
+    if (storedTheme === 'light') {
+      htmlElement.setAttribute('data-theme', 'light');
+      htmlElement.classList.add('light');
+      document.body.classList.add('bg-slate-50', 'text-slate-900');
+      document.body.classList.remove('bg-[#0b0f19]', 'text-gray-100');
+    } else {
+      htmlElement.setAttribute('data-theme', 'dark');
+      htmlElement.classList.remove('light');
+    }
+
+    themeToggleBtn.addEventListener('click', () => {
+      const currentTheme = htmlElement.getAttribute('data-theme');
+      if (currentTheme === 'dark') {
+        htmlElement.setAttribute('data-theme', 'light');
+        htmlElement.classList.add('light');
+        localStorage.setItem('theme', 'light');
+        document.body.classList.add('bg-slate-50', 'text-slate-900');
+        document.body.classList.remove('bg-[#0b0f19]', 'text-gray-100');
+      } else {
+        htmlElement.setAttribute('data-theme', 'dark');
+        htmlElement.classList.remove('light');
+        localStorage.setItem('theme', 'light');
+        document.body.classList.add('bg-[#0b0f19]', 'text-gray-100');
+        document.body.classList.remove('bg-slate-50', 'text-slate-900');
+      }
+    });
+  </script>
+</body>
+</html>

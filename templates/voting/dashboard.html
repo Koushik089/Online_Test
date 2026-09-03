@@ -1,0 +1,193 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Voting Portal - Online Voting System</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="{% static 'style.css' %}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    }
+  </script>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans min-h-screen relative flex flex-col justify-between overflow-x-hidden selection:bg-blue-700 selection:text-white">
+
+  <!-- Auras -->
+  <div class="absolute top-[-15%] left-[-15%] w-[60%] h-[60%] rounded-full bg-blue-700/10 blur-[130px] pointer-events-none animate-pulse-slow"></div>
+  <div class="absolute bottom-[-15%] right-[-15%] w-[60%] h-[60%] rounded-full bg-blue-700/5 blur-[130px] pointer-events-none animate-pulse-slow"></div>
+
+  <!-- Header -->
+  <header class="glass-navbar sticky top-0 w-full z-50">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <a href="{% url 'hero' %}" class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-700 to-blue-600 flex items-center justify-center text-white shadow-lg">
+          <i class="fa-solid fa-graduation-cap text-lg"></i>
+        </a>
+        <span class="font-display font-extrabold text-2xl tracking-tight bg-gradient-to-r from-blue-900 via-blue-700 to-blue-600 bg-clip-text text-transparent">Online Exam System - Voting</span>
+      </div>
+      
+      <div class="flex items-center gap-4">
+        <button id="themeToggle" class="theme-toggle-btn w-9 h-9" aria-label="Toggle Theme">
+          <i class="fa-solid fa-sun text-sm block dark:hidden"></i>
+          <i class="fa-solid fa-moon text-sm hidden dark:block"></i>
+        </button>
+        {% if is_admin %}
+          <a href="{% url 'admin_polls' %}" class="btn-primary text-xs py-2 px-4 bg-gradient-to-r from-blue-700 to-blue-600"><i class="fa-solid fa-user-shield mr-1"></i> Manage Polls</a>
+        {% endif %}
+        <a href="{% url 'hero' %}" class="btn-secondary text-xs py-2 px-4"><i class="fa-solid fa-arrow-left mr-1"></i> Back to Home</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main class="flex-grow max-w-7xl w-full mx-auto py-12 px-6 z-10 space-y-12">
+    
+    <!-- Title Area -->
+    <div class="text-center space-y-3">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-700/10 border border-blue-700/20 text-blue-400 text-xs font-semibold uppercase tracking-wider">
+        <i class="fa-solid fa-check-to-slot mr-1"></i> Democratic Voting Portal
+      </div>
+      <h1 class="text-3xl sm:text-5xl font-extrabold font-display tracking-tight text-white">Online Voting System</h1>
+      <p class="text-xs sm:text-sm text-gray-500 max-w-lg mx-auto">Cast your vote securely in active polls, check candidates, and view real-time results.</p>
+    </div>
+
+    <!-- Django Messages -->
+    {% if messages %}
+      <div class="max-w-3xl mx-auto space-y-2">
+        {% for message in messages %}
+          <div class="p-4 rounded-xl border text-xs sm:text-sm font-semibold flex items-center gap-3
+                      {% if message.tags == 'success' %}bg-emerald-500/10 border-emerald-500/20 text-emerald-400
+                      {% else %}bg-rose-500/10 border-rose-500/20 text-rose-400{% endif %}">
+            {% if message.tags == 'success' %}
+              <i class="fa-solid fa-circle-check text-lg"></i>
+            {% else %}
+              <i class="fa-solid fa-circle-exclamation text-lg"></i>
+            {% endif %}
+            <span>{{ message }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      
+      <!-- Active Polls -->
+      <section class="space-y-6">
+        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+          <span class="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping"></span>
+          Active Polls & Elections
+        </h2>
+        
+        {% if active_polls %}
+          <div class="space-y-4">
+            {% for poll in active_polls %}
+              <div class="glass-card p-6 border-emerald-500/10 relative overflow-hidden flex flex-col justify-between space-y-4 hover:border-emerald-500/20 transition-all duration-300">
+                <div class="absolute -right-8 -top-8 w-20 h-20 bg-emerald-500/5 rounded-full blur-xl"></div>
+                <div class="space-y-2">
+                  <h3 class="text-lg font-bold text-white">{{ poll.title }}</h3>
+                  <p class="text-xs text-gray-500 leading-relaxed">{{ poll.description }}</p>
+                </div>
+                <div class="flex justify-between items-center pt-2">
+                  <span class="text-[10px] text-gray-500 font-semibold"><i class="fa-regular fa-clock mr-1"></i> Running</span>
+                  <div class="flex gap-2">
+                    {% if poll.id in user_votes %}
+                      <a href="{% url 'voting_results' poll.id %}" class="btn-secondary text-[11px] py-1.5 px-3 border-blue-500/30 text-blue-400 hover:bg-blue-700/10">
+                        <i class="fa-solid fa-chart-simple mr-1"></i> Results
+                      </a>
+                      <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 py-1.5 px-3 rounded-lg font-semibold flex items-center">
+                        <i class="fa-solid fa-circle-check mr-1"></i> Voted
+                      </span>
+                    {% else %}
+                      <a href="{% url 'voting_results' poll.id %}" class="btn-secondary text-[11px] py-1.5 px-3">
+                        <i class="fa-solid fa-chart-simple mr-1"></i> Results
+                      </a>
+                      <a href="{% url 'voting_detail' poll.id %}" class="btn-primary text-[11px] py-1.5 px-4 bg-gradient-to-tr from-blue-700 to-blue-600 shadow-emerald-500/10">
+                        Vote Candidate <i class="fa-solid fa-arrow-right ml-1 text-[10px]"></i>
+                      </a>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="glass-card p-8 text-center text-gray-500 text-xs">
+            <i class="fa-solid fa-box-archive text-3xl mb-3 text-gray-600"></i>
+            <p>No active polls running at this time.</p>
+          </div>
+        {% endif %}
+      </section>
+
+      <!-- Completed Polls -->
+      <section class="space-y-6">
+        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+          <span class="w-2.5 h-2.5 bg-gray-500 rounded-full"></span>
+          Completed Polls & Archives
+        </h2>
+        
+        {% if completed_polls %}
+          <div class="space-y-4">
+            {% for poll in completed_polls %}
+              <div class="glass-card p-6 border-white/5 relative overflow-hidden flex flex-col justify-between space-y-4">
+                <div class="space-y-2">
+                  <h3 class="text-lg font-bold text-white opacity-70">{{ poll.title }}</h3>
+                  <p class="text-xs text-gray-500 leading-relaxed">{{ poll.description }}</p>
+                </div>
+                <div class="flex justify-between items-center pt-2">
+                  <span class="text-[10px] text-gray-500 font-semibold"><i class="fa-solid fa-lock mr-1"></i> Closed</span>
+                  <a href="{% url 'voting_results' poll.id %}" class="btn-secondary text-[11px] py-1.5 px-4 border-blue-500/30 text-blue-400 hover:bg-blue-700/10">
+                    <i class="fa-solid fa-chart-simple mr-1"></i> View Final Results
+                  </a>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="glass-card p-8 text-center text-gray-500 text-xs">
+            <i class="fa-solid fa-box-archive text-3xl mb-3 text-gray-600"></i>
+            <p>No completed polls archived yet.</p>
+          </div>
+        {% endif %}
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="glass-navbar py-8 px-6 text-center text-xs text-gray-500 relative z-10">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+      <p>© 2026 Online Voting Portal. Secure & Transparent.</p>
+      <a href="{% url 'hero' %}" class="hover:underline hover:text-blue-400 font-semibold">Dashboard Home</a>
+    </div>
+  <script>
+    const themeToggleBtn = document.getElementById('themeToggle');
+    const htmlElement = document.documentElement;
+    function applyTheme(t) {
+      if (t === 'dark') {
+        htmlElement.setAttribute('data-theme', 'dark');
+        htmlElement.classList.add('dark');
+        htmlElement.classList.remove('light');
+      } else {
+        htmlElement.setAttribute('data-theme', 'light');
+        htmlElement.classList.add('light');
+        htmlElement.classList.remove('dark');
+      }
+    }
+    const stored = localStorage.getItem('theme') || 'light';
+    applyTheme(stored);
+    if (themeToggleBtn) {
+      themeToggleBtn.addEventListener('click', () => {
+        const next = htmlElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('theme', next);
+        applyTheme(next);
+      });
+    }
+  </script>
+</body>
+</html>

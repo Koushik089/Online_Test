@@ -1,0 +1,128 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign Up - Online Exam System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="{% static 'style.css' %}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script>tailwind.config = { darkMode: 'class' }</script>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans min-h-screen relative flex items-center justify-center px-4 py-8 overflow-x-hidden selection:bg-blue-700 selection:text-white">
+
+  <div class="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-blue-700/5 blur-[130px] pointer-events-none"></div>
+  <div class="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-slate-300/5 blur-[130px] pointer-events-none"></div>
+
+  <div class="w-full max-w-md z-10 space-y-6">
+    <div class="flex justify-between items-center px-2">
+      <a href="{% url 'wellcome' %}" class="flex items-center gap-2 group">
+        <i class="fa-solid fa-arrow-left-long text-slate-600 group-hover:text-blue-700 group-hover:-translate-x-1 transition duration-200"></i>
+        <span class="text-xs text-slate-600 group-hover:text-blue-700 transition font-semibold">Back to Home</span>
+      </a>
+      <button id="themeToggle" class="theme-toggle-btn w-9 h-9" aria-label="Toggle Theme">
+        <i class="fa-solid fa-sun text-sm block dark:hidden"></i>
+        <i class="fa-solid fa-moon text-sm hidden dark:block"></i>
+      </button>
+    </div>
+
+    <div class="glass-card p-8 glow-border space-y-6">
+      <div class="text-center space-y-2">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-blue-700 to-blue-600 flex items-center justify-center text-white mx-auto shadow-md shadow-blue-700/20">
+          <i class="fa-solid fa-user-plus text-xl"></i>
+        </div>
+        <h2 class="text-3xl font-extrabold font-display tracking-tight text-slate-900 mt-4">Create Account</h2>
+        <p class="text-xs text-slate-600">Join Online Exam System to take assessments.</p>
+      </div>
+
+      {% if messages %}
+        <div class="space-y-2">
+          {% for message in messages %}
+            <div class="p-3 text-xs rounded border {% if message.tags == 'error' %}bg-rose-500/10 border-rose-500/20 text-rose-400{% else %}bg-emerald-500/10 border-emerald-500/20 text-emerald-400{% endif %} flex items-center gap-2">
+              <i class="fa-solid {% if message.tags == 'error' %}fa-circle-exclamation{% else %}fa-circle-check{% endif %}"></i>
+              <span>{{ message }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <form method="POST" action="{% url 'signup' %}" class="space-y-4">
+        {% csrf_token %}
+        <div class="space-y-1.5">
+          <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Username</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500"><i class="fa-regular fa-user"></i></span>
+            <input type="text" name="username" required class="glass-input w-full pl-10" placeholder="e.g. johndoe">
+          </div>
+        </div>
+        <div class="space-y-1.5">
+          <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Email Address</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500"><i class="fa-regular fa-envelope"></i></span>
+            <input type="email" name="email" required class="glass-input w-full pl-10" placeholder="e.g. john@example.com">
+          </div>
+        </div>
+        <div class="space-y-1.5">
+          <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Password</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500"><i class="fa-regular fa-lock"></i></span>
+            <input type="password" name="password" id="password" required class="glass-input w-full pl-10 pr-10" placeholder="Enter strong password">
+            <button type="button" onclick="togglePassword('password','eyeIcon1')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-300">
+              <i id="eyeIcon1" class="fa-regular fa-eye"></i>
+            </button>
+          </div>
+        </div>
+        <div class="space-y-1.5">
+          <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Confirm Password</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500"><i class="fa-regular fa-lock-keyhole"></i></span>
+            <input type="password" name="confirm_password" id="confirm_password" required class="glass-input w-full pl-10 pr-10" placeholder="Confirm your password">
+            <button type="button" onclick="togglePassword('confirm_password','eyeIcon2')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-300">
+              <i id="eyeIcon2" class="fa-regular fa-eye"></i>
+            </button>
+          </div>
+        </div>
+        <button type="submit" class="btn-primary w-full py-3.5 mt-2">
+          Create Account <i class="fa-solid fa-user-plus ml-1"></i>
+        </button>
+      </form>
+
+      <div class="text-center pt-2 text-xs text-slate-600">
+        Already have an account? <a href="{% url 'student_login' %}" class="text-blue-700 font-semibold hover:underline">Sign In</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function togglePassword(inputId, iconId) {
+      const input = document.getElementById(inputId);
+      const icon = document.getElementById(iconId);
+      input.type = input.type === "password" ? "text" : "password";
+      icon.className = input.type === "password" ? "fa-regular fa-eye" : "fa-regular fa-eye-slash";
+    }
+    const themeToggleBtn = document.getElementById('themeToggle');
+    const htmlElement = document.documentElement;
+    function applyTheme(t) {
+      if (t === 'dark') {
+        htmlElement.setAttribute('data-theme', 'dark');
+        htmlElement.classList.add('dark');
+        htmlElement.classList.remove('light');
+      } else {
+        htmlElement.setAttribute('data-theme', 'light');
+        htmlElement.classList.add('light');
+        htmlElement.classList.remove('dark');
+      }
+    }
+    const stored = localStorage.getItem('theme') || 'light';
+    applyTheme(stored);
+    if (themeToggleBtn) {
+      themeToggleBtn.addEventListener('click', () => {
+        const next = htmlElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('theme', next);
+        applyTheme(next);
+      });
+    }
+  </script>
+</body>
+</html>

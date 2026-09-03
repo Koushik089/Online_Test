@@ -1,0 +1,300 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Dashboard - Online Exam System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="{% static 'style.css' %}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            navy: { DEFAULT: '#000080', dark: '#000059', light: '#1A3C80' },
+            gold: { DEFAULT: '#C9A61C', light: '#E0BC3C' }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans min-h-screen relative flex flex-col justify-between overflow-x-hidden selection:bg-navy selection:text-white">
+
+  <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-navy/5 blur-[120px] pointer-events-none animate-pulse-slow"></div>
+  <div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-slate-300/5 blur-[120px] pointer-events-none animate-pulse-slow"></div>
+
+  <nav class="glass-navbar sticky top-0 w-full z-50">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-navy to-navy-light flex items-center justify-center text-white shadow-lg shadow-navy/20">
+          <i class="fa-solid fa-graduation-cap text-lg"></i>
+        </div>
+        <span class="font-display font-extrabold text-2xl tracking-tight bg-gradient-to-r from-navy-dark via-navy to-navy-light bg-clip-text text-transparent">Online Exam System</span>
+      </div>
+
+      <ul class="hidden md:flex gap-5 items-center text-sm font-semibold">
+        <li><a href="{% url 'hero' %}" class="hover:text-navy transition">Home</a></li>
+        <li><a href="{% url 'subject_choice' %}" class="hover:text-navy transition">Exams</a></li>
+        <li><a href="{% url 'leaderboard' %}" class="hover:text-navy transition">Leaderboard</a></li>
+        <li><a href="{% url 'performance' %}" class="hover:text-navy transition">Analytics</a></li>
+        <!-- <li><a href="{% url 'voting_dashboard' %}" class="hover:text-navy transition">Voting</a></li> -->
+        <li><a href="{% url 'notifications_list' %}" class="hover:text-navy transition"><i class="fa-regular fa-bell mr-1"></i>Alerts</a></li>
+        {% if user.is_authenticated %}
+          <li><a href="{% url 'profile' %}" class="hover:text-navy transition"><i class="fa-regular fa-user mr-1"></i>Profile</a></li>
+        {% endif %}
+      </ul>
+
+      <div class="flex items-center gap-4">
+        <button id="themeToggle" class="theme-toggle-btn w-9 h-9" aria-label="Toggle Theme">
+          <i class="fa-solid fa-sun text-sm block dark:hidden"></i>
+          <i class="fa-solid fa-moon text-sm hidden dark:block"></i>
+        </button>
+        {% if user.is_authenticated %}
+          <div class="flex items-center gap-3 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full shadow-inner">
+            <a href="{% url 'profile' %}" class="w-8 h-8 rounded-full bg-gradient-to-tr from-navy to-navy-light flex items-center justify-center text-white text-xs font-bold ring-2 ring-navy/20 hover:scale-105 transition duration-200">
+              {{ user.first_name|default:user.username|first|upper }}
+            </a>
+            <span class="text-xs font-bold text-slate-700 hidden sm:inline">{{ user.get_full_name|default:user.username }}</span>
+            <form method="POST" action="{% url 'logout' %}" class="m-0">
+              {% csrf_token %}
+              <button type="submit" class="text-xs text-rose-400 hover:text-rose-300 font-semibold border-l border-white/10 pl-3">Logout</button>
+            </form>
+          </div>
+        {% else %}
+          <div class="flex items-center gap-3">
+            <a href="{% url 'student_login' %}" class="btn-secondary text-xs py-2 px-4">Login</a>
+            <a href="{% url 'signup' %}" class="btn-primary text-xs py-2 px-4">Sign Up</a>
+          </div>
+        {% endif %}
+        <button id="menu-toggle" class="md:hidden text-slate-500 hover:text-navy focus:outline-none">
+          <i class="fa-solid fa-bars text-xl"></i>
+        </button>
+      </div>
+    </div>
+
+    <div id="mobile-menu" class="hidden border-t border-navy/10 bg-white/95 backdrop-blur-lg px-6 py-4 space-y-3">
+      <a href="{% url 'hero' %}" class="block text-sm py-2 hover:text-navy transition border-b border-navy/10">Home</a>
+      <a href="{% url 'subject_choice' %}" class="block text-sm py-2 hover:text-navy transition border-b border-navy/10">Exams</a>
+      <a href="{% url 'leaderboard' %}" class="block text-sm py-2 hover:text-navy transition border-b border-navy/10">Leaderboard</a>
+      <a href="{% url 'performance' %}" class="block text-sm py-2 hover:text-navy transition border-b border-navy/10">Analytics</a>
+      <a href="{% url 'voting_dashboard' %}" class="block text-sm py-2 hover:text-navy transition border-b border-navy/10">Voting</a>
+      <a href="{% url 'notifications_list' %}" class="block text-sm py-2 hover:text-navy transition border-b border-navy/10">Notifications</a>
+      {% if user.is_authenticated %}
+        <a href="{% url 'profile' %}" class="block text-sm py-2 hover:text-gold-light transition border-b border-white/5">Profile</a>
+        <form method="POST" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="w-full text-left text-sm py-2 text-rose-400 hover:text-rose-300 transition">Logout</button>
+        </form>
+      {% endif %}
+    </div>
+  </nav>
+
+  <section id="hero" class="flex-grow pt-24 pb-16 px-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center w-full z-10">
+    <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
+      <h2 class="text-lg font-bold text-navy uppercase tracking-widest">Student Portal</h2>
+      <h1 class="text-4xl sm:text-6xl font-extrabold font-display leading-tight text-slate-900">
+        Assess, Learn & <span class="bg-gradient-to-r from-navy via-navy-light to-navy bg-clip-text text-transparent">Succeed</span>
+      </h1>
+      <p class="text-sm sm:text-base text-slate-600 leading-relaxed max-w-xl mx-auto lg:mx-0">
+        Hi {% if user.is_authenticated %}{{ user.first_name|default:user.username }}{% else %}Guest{% endif %}! Welcome to your digital exam board. Here you can start scheduled tests, review detailed answers, monitor performance metrics, and track your global standing.
+      </p>
+      <div class="pt-4 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+        <a href="#student" class="btn-primary text-sm py-3 px-6">
+          Go to Dashboard <i class="fa-solid fa-arrow-down ml-1"></i>
+        </a>
+        <a href="#about" class="btn-secondary text-sm py-3 px-6">View Exam Guidelines</a>
+      </div>
+    </div>
+
+    <div class="lg:col-span-5 flex justify-center animate-float">
+      <div class="glass-card w-full max-w-sm p-6 space-y-6 glow-border relative overflow-hidden">
+        <div class="absolute -right-12 -top-12 w-28 h-28 bg-gray-500/10 rounded-full blur-2xl"></div>
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-slate-500 font-bold uppercase tracking-wider">Upcoming Announcements</span>
+          <i class="fa-regular fa-bell text-emerald-600"></i>
+        </div>
+        <div class="space-y-4">
+          <div class="p-3 bg-slate-50 rounded border border-slate-200 space-y-1">
+            <h4 class="font-bold text-xs text-navy">Exam Security Updates</h4>
+            <p class="text-[11px] text-slate-600">Please note that all upcoming tests now enforce strict fullscreen proctoring rules.</p>
+          </div>
+          <div class="p-3 bg-slate-50 rounded border border-slate-200 space-y-1">
+            <h4 class="font-bold text-xs text-navy">New Subject Added</h4>
+            <p class="text-[11px] text-slate-600">Operating Systems assessment is now live. Ensure you study memory management.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="student" class="py-16 px-6 border-t border-white/5 bg-navy-dark relative z-10">
+    <div class="max-w-6xl mx-auto space-y-12">
+      <div class="text-center max-w-2xl mx-auto space-y-2">
+        <h2 class="text-3xl sm:text-4xl font-extrabold font-display text-white">Student Dashboard</h2>
+        <p class="text-xs sm:text-sm text-gray-400">Access assessments, view scorecards, and review subject metrics.</p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        <div class="glass-card p-6 flex flex-col justify-between space-y-6 glass-card-hover border-indigo-400/20">
+          <div class="space-y-4">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-indigo-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+              <i class="fa-solid fa-pen-to-square text-xl"></i>
+            </div>
+            <h3 class="text-xl font-bold text-navy">Assessment Hub</h3>
+            <p class="text-xs text-slate-600 leading-relaxed">Start new exams on DBMS, Computer Networks, and Operating Systems. Experience high-integrity exam proctoring interface.</p>
+          </div>
+          <a href="{% url 'subject_choice' %}" class="btn-primary text-xs py-2.5 w-full text-center">
+            Go to Exams <i class="fa-solid fa-circle-play ml-1"></i>
+          </a>
+        </div>
+
+        <div class="glass-card p-6 flex flex-col justify-between space-y-6 glass-card-hover border-emerald-400/20">
+          <div class="space-y-4">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
+              <i class="fa-solid fa-square-poll-vertical text-xl"></i>
+            </div>
+            <h3 class="text-xl font-bold text-navy">Instant Scorecard</h3>
+            <p class="text-xs text-slate-600 leading-relaxed">Retrieve immediate scorecards with percentage ratios, passed markers, and question-by-question breakdown.</p>
+          </div>
+          <a href="{% url 'result' %}" class="btn-primary text-xs py-2.5 w-full text-center bg-gradient-to-tr from-emerald-500 to-teal-500 shadow-emerald-500/20">
+            View Scorecards <i class="fa-solid fa-square-poll-vertical ml-1"></i>
+          </a>
+        </div>
+
+        <div class="glass-card p-6 flex flex-col justify-between space-y-6 glass-card-hover border-rose-400/20">
+          <div class="space-y-4">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-rose-500 to-orange-500 flex items-center justify-center text-white shadow-lg shadow-rose-500/20">
+              <i class="fa-solid fa-chart-pie text-xl"></i>
+            </div>
+            <h3 class="text-xl font-bold text-navy">Performance Analytics</h3>
+            <p class="text-xs text-slate-600 leading-relaxed">Analyze academic trends using interactive charts, view exam histories, bookmarks, and claim digital certificates.</p>
+          </div>
+          <a href="/performance" class="btn-primary text-xs py-2.5 w-full text-center bg-gradient-to-tr from-rose-500 to-orange-500 shadow-rose-500/20">
+            Analyze Analytics <i class="fa-solid fa-chart-line ml-1"></i>
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <section id="about" class="py-16 px-6 border-t border-white/5 bg-navy-dark relative z-10">
+    <div class="max-w-4xl mx-auto space-y-12">
+      <div class="text-center max-w-2xl mx-auto space-y-2">
+        <h2 class="text-3xl sm:text-4xl font-extrabold font-display text-white">Rules & Guidelines</h2>
+        <p class="text-xs sm:text-sm text-gray-500">Read through the platform instructions carefully before starting any exam.</p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+        <div class="space-y-4">
+          <h3 class="text-xl font-bold text-gold-light">Strict Code of Conduct</h3>
+          <ul class="space-y-3 text-xs text-gray-400">
+            <li class="flex items-start gap-2.5"><i class="fa-solid fa-shield text-sky-400 mt-0.5"></i><span>Stable Network: Ensure a steady internet connection. The timer does not stop if you drop offline.</span></li>
+            <li class="flex items-start gap-2.5"><i class="fa-solid fa-shield text-violet-400 mt-0.5"></i><span>Fullscreen Lock: All assessments require fullscreen. Exiting fullscreen logs a warning in the database.</span></li>
+            <li class="flex items-start gap-2.5"><i class="fa-solid fa-shield text-amber-400 mt-0.5"></i><span>Tab Switch Detection: Navigating away triggers warnings. Exceeding 3 warnings submits the exam.</span></li>
+            <li class="flex items-start gap-2.5"><i class="fa-solid fa-shield text-rose-400 mt-0.5"></i><span>Disablers: Copy/paste, keyboard shortcuts, and right-clicks are strictly disabled inside the exam room.</span></li>
+          </ul>
+        </div>
+        <div class="glass-card p-6 border-slate-200 space-y-4">
+          <h3 class="text-lg font-bold text-navy"><i class="fa-regular fa-lightbulb text-amber-500 mr-1"></i> Exam Features</h3>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="p-3 bg-slate-50 rounded text-center">
+              <i class="fa-solid fa-clock text-sky-500 text-lg mb-1"></i>
+              <h4 class="font-bold text-xs text-navy">Auto-Submit</h4>
+              <p class="text-[10px] text-slate-600 mt-1">Timer auto-saves and auto-submits answers.</p>
+            </div>
+            <div class="p-3 bg-slate-50 rounded text-center">
+              <i class="fa-solid fa-floppy-disk text-emerald-600 text-lg mb-1"></i>
+              <h4 class="font-bold text-xs text-navy">Auto-Save</h4>
+              <p class="text-[10px] text-slate-600 mt-1">Every selection is stored via AJAX instantly.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact" class="py-16 px-6 border-t border-white/5 bg-navy-dark relative z-10">
+    <div class="max-w-md mx-auto space-y-8">
+      <div class="text-center space-y-2">
+        <h2 class="text-3xl font-extrabold font-display text-white">Contact Administration</h2>
+        <p class="text-xs text-gray-500">Encountered an issue? Send a direct message to helpdesk.</p>
+      </div>
+      <form id="contactForm" onsubmit="handleSubmit(event)" class="glass-card p-6 glow-border space-y-4">
+        <div class="space-y-1">
+          <label class="text-xs font-bold text-slate-600 uppercase tracking-wider">Your Name</label>
+          <input type="text" id="name" required class="glass-input w-full" placeholder="e.g. John Doe">
+        </div>
+        <div class="space-y-1">
+          <label class="text-xs font-bold text-slate-600 uppercase tracking-wider">Email Address</label>
+          <input type="email" id="email" required class="glass-input w-full" placeholder="e.g. john@example.com">
+        </div>
+        <div class="space-y-1">
+          <label class="text-xs font-bold text-slate-600 uppercase tracking-wider">Your Message</label>
+          <textarea id="message" rows="4" required class="glass-input w-full resize-none" placeholder="Provide details about your query..."></textarea>
+        </div>
+        <button type="submit" class="btn-primary w-full py-3">Send Message <i class="fa-regular fa-paper-plane ml-1"></i></button>
+        <p id="msg" class="text-xs text-center text-emerald-400 font-semibold hidden pt-2"></p>
+      </form>
+    </div>
+  </section>
+
+  <footer class="glass-navbar py-8 px-6 text-center text-xs text-gray-500 relative z-10">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+      <p>© 2026 Online Exam System. Designed & Developed with ❤️ by Koushik Ghosh.</p>
+      <div class="flex gap-4">
+        <a href="#" class="hover:text-gold-light transition">Terms of Service</a>
+        <span class="text-white/10">|</span>
+        <a href="#" class="hover:text-gold-light transition">Privacy Policy</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function handleSubmit(e) {
+      e.preventDefault();
+      const statusMsg = document.getElementById("msg");
+      const name = document.getElementById("name").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const message = document.getElementById("message").value.trim();
+      if (!name || !email || !message) {
+        statusMsg.innerText = "Please fill in all fields.";
+        statusMsg.className = "text-xs text-center text-rose-400 font-semibold pt-2 block";
+        return;
+      }
+      statusMsg.innerText = "Message sent successfully!";
+      statusMsg.className = "text-xs text-center text-emerald-400 font-semibold pt-2 block";
+      e.target.reset();
+      setTimeout(() => { statusMsg.className = "hidden"; }, 4000);
+    }
+    document.getElementById("menu-toggle").addEventListener("click", () => {
+      document.getElementById("mobile-menu").classList.toggle("hidden");
+    });
+    const themeToggleBtn = document.getElementById('themeToggle');
+    const htmlElement = document.documentElement;
+    function applyTheme(t) {
+      if (t === 'dark') {
+        htmlElement.setAttribute('data-theme', 'dark');
+        htmlElement.classList.add('dark');
+        htmlElement.classList.remove('light');
+      } else {
+        htmlElement.setAttribute('data-theme', 'light');
+        htmlElement.classList.add('light');
+        htmlElement.classList.remove('dark');
+      }
+    }
+    const stored = localStorage.getItem('theme') || 'light';
+    applyTheme(stored);
+    if (themeToggleBtn) {
+      themeToggleBtn.addEventListener('click', () => {
+        const next = htmlElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('theme', next);
+        applyTheme(next);
+      });
+    }
+  </script>
+</body>
+</html>

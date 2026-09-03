@@ -1,0 +1,481 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{ subject_title }} Exam - Secure Proctoring Panel</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="{% static 'style.css' %}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    }
+  </script>
+
+  <style>
+    /* Fullscreen modal styling */
+    .proctor-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(8px);
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    
+    /* Active option highlights */
+    .option-card input:checked + div {
+      border-color: var(--primary);
+      background: rgba(0, 82, 204, 0.08);
+      box-shadow: 0 0 12px rgba(0, 82, 204, 0.1);
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans min-h-screen relative flex flex-col justify-between select-none">
+
+  <!-- Fullscreen Enforcer Modal -->
+  <div id="fullscreenModal" class="fixed inset-0 z-[100] bg-blue-700/95 backdrop-blur-lg flex items-center justify-center p-6">
+    <div class="glass-card max-w-md w-full p-8 text-center space-y-6 glow-border">
+      <div class="w-16 h-16 rounded-full bg-blue-700/10 border border-blue-700/20 flex items-center justify-center text-blue-700 mx-auto">
+        <i class="fa-solid fa-expand text-2xl"></i>
+      </div>
+      <h2 class="text-2xl font-bold text-slate-900">Enter Fullscreen Mode</h2>
+      <p class="text-xs text-slate-700">This assessment enforces strict proctoring guidelines. You must enter fullscreen mode to start. Any attempt to exit will log a violation.</p>
+      <button onclick="requestFullscreenAndStart()" class="btn-primary w-full py-3">
+        Initialize Exam Room
+        <i class="fa-solid fa-circle-play ml-1"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Tab Violation Modal Alert -->
+  <div id="violationModal" class="proctor-modal">
+    <div class="glass-card max-w-md w-full p-6 text-center space-y-4 border-rose-500/20">
+      <div class="w-12 h-12 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 mx-auto">
+        <i class="fa-solid fa-circle-exclamation text-xl animate-ping"></i>
+      </div>
+      <h3 class="text-xl font-bold text-rose-400">Security Warning!</h3>
+      <p class="text-xs text-gray-300">A window unfocus / tab switch was detected. This incident has been logged in the proctoring logs.</p>
+      <div class="bg-rose-500/5 p-3 rounded text-rose-400 text-xs font-semibold">
+        Warning Counter: <span id="violationCount">0</span> / 3
+      </div>
+      <p class="text-[10px] text-gray-500">Exceeding 3 warnings will result in automated exam submission.</p>
+      <button onclick="closeViolationModal()" class="btn-primary py-2.5 px-6 text-xs bg-rose-600 hover:bg-rose-700">Resume Exam</button>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="glass-navbar sticky top-0 w-full z-40">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div>
+        <h1 class="font-display font-bold text-lg text-white">{{ subject_title }}</h1>
+        <p class="text-[10px] text-gray-500 uppercase tracking-widest">Candidate: {{ session.user.username }}</p>
+      </div>
+
+      <!-- Live metrics -->
+      <div class="flex items-center gap-6">
+        <!-- Timer -->
+        <div class="flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 px-3.5 py-1.5 rounded-full text-indigo-400 font-bold text-sm">
+          <i class="fa-regular fa-clock text-lg"></i>
+          <span id="countdownTimer">00:00</span>
+        </div>
+        
+        <!-- Warning display -->
+        <div class="flex items-center gap-2 bg-rose-500/10 border border-rose-500/20 px-3.5 py-1.5 rounded-full text-rose-400 font-bold text-xs">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <span>Warnings: <span id="warningDisplay">0</span> / 3</span>
+        </div>
+
+        <!-- Connection / Autosave status -->
+        <div class="hidden sm:flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full font-semibold">
+          <span class="h-2 w-2 bg-emerald-400 rounded-full animate-pulse"></span>
+          <span id="saveStatus">Autosave Active</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Layout Wrapper -->
+  <div class="flex-grow flex flex-col md:flex-row max-w-7xl w-full mx-auto p-6 gap-6 z-10">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="md:w-64 glass-card p-5 flex flex-col gap-6 border-indigo-500/10 h-fit sticky top-24">
+      <div class="space-y-1">
+        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Exam Navigation</h3>
+        <p class="text-[10px] text-gray-500">Jump to any question instantly</p>
+      </div>
+
+      <!-- Question numbers grid -->
+      <div class="grid grid-cols-5 gap-2" id="gridContainer">
+        {% for response in session.responses.all %}
+          <button onclick="scrollToQuestion('q-{{ response.question.id }}')" 
+                  id="nav-btn-{{ response.question.id }}"
+                  class="w-10 h-10 rounded-lg text-xs font-bold transition flex items-center justify-center
+                         {% if response.selected_answer %}bg-emerald-500/10 border border-emerald-500/20 text-emerald-400
+                         {% elif response.bookmarked %}bg-amber-500/10 border border-amber-500/20 text-amber-400
+                         {% else %}bg-white/5 border border-white/5 text-gray-500 hover:bg-white/10{% endif %}">
+            {{ forloop.counter }}
+          </button>
+        {% endfor %}
+      </div>
+
+      <!-- Indicators info -->
+      <div class="pt-4 border-t border-white/5 space-y-2 text-[10px] text-gray-500">
+        <div class="flex items-center gap-2">
+          <span class="w-3.5 h-3.5 rounded bg-emerald-500/10 border border-emerald-500/20 block"></span>
+          <span>Answered & Saved</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-3.5 h-3.5 rounded bg-amber-500/10 border border-amber-500/20 block"></span>
+          <span>Bookmarked / Review</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-3.5 h-3.5 rounded bg-white/5 border border-white/5 block"></span>
+          <span>Unanswered / Unvisited</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Questions list -->
+    <main class="flex-grow space-y-8">
+      <form id="examForm" method="POST" action="{% url 'submit_exam' %}">
+        {% csrf_token %}
+        <input type="hidden" name="session_id" value="{{ session.id }}">
+
+        <div class="space-y-8">
+          {% for response in session.responses.all %}
+            <div id="q-{{ response.question.id }}" class="glass-card p-6 md:p-8 space-y-6 scroll-mt-24 transition duration-300">
+              
+              <!-- Question Header (Number & Bookmark) -->
+              <div class="flex justify-between items-start gap-4">
+                <span class="text-xs font-bold text-indigo-400 uppercase tracking-widest">Question {{ forloop.counter }}</span>
+                <button type="button" 
+                        onclick="toggleBookmark('{{ response.question.id }}')"
+                        id="bookmark-btn-{{ response.question.id }}"
+                        class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-sm transition
+                               {% if response.bookmarked %}text-amber-400 bg-amber-500/10 border border-amber-500/20{% else %}text-gray-500{% endif %}">
+                  <i class="fa-solid fa-bookmark"></i>
+                </button>
+              </div>
+
+              <!-- Question text -->
+              <h3 class="text-base sm:text-lg font-semibold text-slate-900 dark:text-white leading-relaxed">
+                {{ response.question.question_text }}
+              </h3>
+
+              <!-- Options -->
+              <div class="grid grid-cols-1 gap-3">
+                
+                <!-- Option A -->
+                <label class="option-card block cursor-pointer group">
+                  <input type="radio" 
+                         name="ans-{{ response.question.id }}" 
+                         value="a" 
+                         onclick="saveAnswer('{{ response.question.id }}', 'a')"
+                         {% if response.selected_answer == 'a' %}checked{% endif %}
+                         class="sr-only">
+                  <div class="border border-white/5 hover:border-indigo-500/30 bg-white/5 hover:bg-white/10 p-4 rounded-xl text-xs sm:text-sm font-medium transition duration-200 flex items-center gap-3">
+                    <span class="w-6 h-6 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-xs text-gray-500 font-bold group-hover:text-white transition">A</span>
+                    <span class="text-slate-700 dark:text-gray-300 group-hover:text-slate-900 dark:group-hover:text-white transition">{{ response.question.option_a }}</span>
+                  </div>
+                </label>
+
+                <!-- Option B -->
+                <label class="option-card block cursor-pointer group">
+                  <input type="radio" 
+                         name="ans-{{ response.question.id }}" 
+                         value="b" 
+                         onclick="saveAnswer('{{ response.question.id }}', 'b')"
+                         {% if response.selected_answer == 'b' %}checked{% endif %}
+                         class="sr-only">
+                  <div class="border border-white/5 hover:border-indigo-500/30 bg-white/5 hover:bg-white/10 p-4 rounded-xl text-xs sm:text-sm font-medium transition duration-200 flex items-center gap-3">
+                    <span class="w-6 h-6 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-xs text-gray-500 font-bold group-hover:text-white transition">B</span>
+                    <span class="text-slate-700 dark:text-gray-300 group-hover:text-slate-900 dark:group-hover:text-white transition">{{ response.question.option_b }}</span>
+                  </div>
+                </label>
+
+                <!-- Option C -->
+                <label class="option-card block cursor-pointer group">
+                  <input type="radio" 
+                         name="ans-{{ response.question.id }}" 
+                         value="c" 
+                         onclick="saveAnswer('{{ response.question.id }}', 'c')"
+                         {% if response.selected_answer == 'c' %}checked{% endif %}
+                         class="sr-only">
+                  <div class="border border-white/5 hover:border-indigo-500/30 bg-white/5 hover:bg-white/10 p-4 rounded-xl text-xs sm:text-sm font-medium transition duration-200 flex items-center gap-3">
+                    <span class="w-6 h-6 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-xs text-gray-500 font-bold group-hover:text-white transition">C</span>
+                    <span class="text-slate-700 dark:text-gray-300 group-hover:text-slate-900 dark:group-hover:text-white transition">{{ response.question.option_c }}</span>
+                  </div>
+                </label>
+
+                <!-- Option D -->
+                <label class="option-card block cursor-pointer group">
+                  <input type="radio" 
+                         name="ans-{{ response.question.id }}" 
+                         value="d" 
+                         onclick="saveAnswer('{{ response.question.id }}', 'd')"
+                         {% if response.selected_answer == 'd' %}checked{% endif %}
+                         class="sr-only">
+                  <div class="border border-white/5 hover:border-indigo-500/30 bg-white/5 hover:bg-white/10 p-4 rounded-xl text-xs sm:text-sm font-medium transition duration-200 flex items-center gap-3">
+                    <span class="w-6 h-6 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-xs text-gray-500 font-bold group-hover:text-white transition">D</span>
+                    <span class="text-slate-700 dark:text-gray-300 group-hover:text-slate-900 dark:group-hover:text-white transition">{{ response.question.option_d }}</span>
+                  </div>
+                </label>
+
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+
+        <!-- Submit Panel -->
+        <div class="pt-10 pb-16 text-center">
+          <button type="submit" onclick="confirmSubmission(event)" class="btn-primary py-3 px-8 shadow-md">
+            Complete & Submit Exam Paper
+            <i class="fa-solid fa-circle-check ml-1"></i>
+          </button>
+        </div>
+
+      </form>
+    </main>
+
+  </div>
+
+  <!-- Proctoring Script Config -->
+  <script>
+    const sessionId = "{{ session.id }}";
+    
+    // Timer configuration read dynamically from session
+    const subjectCode = "{{ session.subject }}";
+    const durationMins = parseInt("{{ session.duration_minutes|default:30 }}") || 30;
+    
+    let timeRemaining = durationMins * 60;
+    let warningsCount = 0;
+    let examStarted = false;
+
+    // Disablers (Security disablers: right-click context menu, copying, cutting, pasting, and shortcuts)
+    document.addEventListener("contextmenu", e => e.preventDefault());
+    document.addEventListener("copy", e => e.preventDefault());
+    document.addEventListener("cut", e => e.preventDefault());
+    document.addEventListener("paste", e => e.preventDefault());
+
+    document.addEventListener("keydown", e => {
+      // Block F12, Ctrl+Shift+I, Ctrl+U, Ctrl+C, Ctrl+V, Alt+Tab checks
+      if (
+        e.keyCode === 123 || // F12
+        (e.ctrlKey && e.shiftKey && e.keyCode === 73) || // Ctrl+Shift+I
+        (e.ctrlKey && e.keyCode === 85) || // Ctrl+U
+        (e.ctrlKey && e.keyCode === 67) || // Ctrl+C
+        (e.ctrlKey && e.keyCode === 86) // Ctrl+V
+      ) {
+        e.preventDefault();
+      }
+    });
+
+    // Scroll helper
+    function scrollToQuestion(id) {
+      const element = document.getElementById(id);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    // Initialize Fullscreen
+    function requestFullscreenAndStart() {
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+      } else if (elem.webkitRequestFullscreen) {
+        elem.webkitRequestFullscreen();
+      } else if (elem.msRequestFullscreen) {
+        elem.msRequestFullscreen();
+      }
+
+      document.getElementById("fullscreenModal").classList.add("hidden");
+      examStarted = true;
+      startTimer();
+    }
+
+    // Monitor fullscreen exit
+    document.addEventListener("fullscreenchange", checkFullscreenSecurity);
+    document.addEventListener("webkitfullscreenchange", checkFullscreenSecurity);
+    document.addEventListener("mozfullscreenchange", checkFullscreenSecurity);
+    document.addEventListener("MSFullscreenChange", checkFullscreenSecurity);
+
+    function checkFullscreenSecurity() {
+      if (!examStarted) return;
+      const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+      if (!isFullscreen) {
+        triggerViolationAlert("Exited fullscreen mode.");
+      }
+    }
+
+    // Monitor Tab switches / window blur
+    window.addEventListener("blur", () => {
+      if (!examStarted) return;
+      triggerViolationAlert("Window unfocused / tab switch detected.");
+    });
+    
+    document.addEventListener("visibilitychange", () => {
+      if (!examStarted) return;
+      if (document.hidden) {
+        triggerViolationAlert("Tab switched / minimized.");
+      }
+    });
+
+    // Send violation count to server via AJAX
+    function triggerViolationAlert(reason) {
+      console.warn("Violation logged: " + reason);
+      
+      fetch("/exam/log-warning/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify({ session_id: sessionId })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'success') {
+          warningsCount = data.warnings_count;
+          document.getElementById("warningDisplay").innerText = warningsCount;
+          document.getElementById("violationCount").innerText = warningsCount;
+          
+          if (data.auto_submit) {
+            alert("Security policy violated: Limit of 3 warnings exceeded. Auto-submitting assessment.");
+            submitPaperImmediately();
+          } else {
+            document.getElementById("violationModal").style.display = "flex";
+          }
+        }
+      });
+    }
+
+    function closeViolationModal() {
+      document.getElementById("violationModal").style.display = "none";
+      // Try to re-request fullscreen if lost
+      const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+      if (!isFullscreen) {
+        const elem = document.documentElement;
+        if (elem.requestFullscreen) {
+          elem.requestFullscreen();
+        }
+      }
+    }
+
+    // Countdown Timer logic
+    function startTimer() {
+      const interval = setInterval(() => {
+        if (timeRemaining <= 0) {
+          clearInterval(interval);
+          alert("Time's up! Your answers are being submitted automatically.");
+          submitPaperImmediately();
+        } else {
+          timeRemaining--;
+          updateTimerDisplay();
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay() {
+      const minutes = Math.floor(timeRemaining / 60);
+      const seconds = timeRemaining % 60;
+      const displayString = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+      document.getElementById("countdownTimer").innerText = displayString;
+    }
+
+    // AJAX Save Answer
+    function saveAnswer(questionId, option) {
+      const statusBadge = document.getElementById("saveStatus");
+      statusBadge.innerText = "Saving response...";
+      statusBadge.className = "hidden sm:flex items-center gap-1.5 text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-full font-semibold";
+      
+      // Update sidebar nav grid color
+      const navBtn = document.getElementById(`nav-btn-${questionId}`);
+      
+      fetch("/exam/save-answer/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify({
+          session_id: sessionId,
+          question_id: questionId,
+          selected_answer: option
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'success') {
+          statusBadge.innerText = "Response Saved";
+          statusBadge.className = "hidden sm:flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full font-semibold";
+          
+          navBtn.className = "w-10 h-10 rounded-lg text-xs font-bold transition flex items-center justify-center bg-emerald-500/10 border border-emerald-500/20 text-emerald-400";
+        } else {
+          statusBadge.innerText = "Autosave error";
+          statusBadge.className = "hidden sm:flex items-center gap-1.5 text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 px-3 py-1.5 rounded-full font-semibold";
+        }
+      });
+    }
+
+    // AJAX Toggle Bookmark
+    function toggleBookmark(questionId) {
+      const btn = document.getElementById(`bookmark-btn-${questionId}`);
+      const navBtn = document.getElementById(`nav-btn-${questionId}`);
+      
+      fetch("/exam/bookmark-question/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify({
+          session_id: sessionId,
+          question_id: questionId
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'success') {
+          if (data.bookmarked) {
+            btn.className = "w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-sm text-amber-400 transition";
+            // Update sidebar nav grid color if not answered
+            if (!navBtn.className.includes("bg-emerald-500")) {
+              navBtn.className = "w-10 h-10 rounded-lg text-xs font-bold transition flex items-center justify-center bg-amber-500/10 border border-amber-500/20 text-amber-400";
+            }
+          } else {
+            btn.className = "w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-sm text-gray-500 hover:bg-white/10 transition";
+            // Restore sidebar nav grid color if not answered
+            if (!navBtn.className.includes("bg-emerald-500")) {
+              navBtn.className = "w-10 h-10 rounded-lg text-xs font-bold transition flex items-center justify-center bg-white/5 border border-white/5 text-gray-500 hover:bg-white/10";
+            }
+          }
+        }
+      });
+    }
+
+    function confirmSubmission(e) {
+      e.preventDefault();
+      if (confirm("Are you sure you want to finish and submit your exam paper?")) {
+        submitPaperImmediately();
+      }
+    }
+
+    function submitPaperImmediately() {
+      // Exit fullscreen before submit to prevent browser freeze
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      }
+      document.getElementById("examForm").submit();
+    }
+  </script>
+</body>
+</html>

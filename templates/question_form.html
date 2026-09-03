@@ -1,0 +1,68 @@
+{% load static %}
+<div class="glass-card p-6 max-w-3xl">
+  <h3 class="font-bold mb-4">{% if form.instance.pk %}Edit{% else %}Add{% endif %} Question</h3>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="grid grid-cols-1 gap-3">
+      {{ form.non_field_errors }}
+      <div>
+        <label class="text-xs text-gray-400">Subject</label>
+        {{ form.subject }}
+        {{ form.subject.errors }}
+      </div>
+      <div>
+        <label class="text-xs text-gray-400">Question Text</label>
+        {{ form.question_text }}
+        {{ form.question_text.errors }}
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="text-xs text-gray-400">Option A</label>
+          {{ form.option_a }}
+        </div>
+        <div>
+          <label class="text-xs text-gray-400">Option B</label>
+          {{ form.option_b }}
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="text-xs text-gray-400">Option C</label>
+          {{ form.option_c }}
+        </div>
+        <div>
+          <label class="text-xs text-gray-400">Option D</label>
+          {{ form.option_d }}
+        </div>
+      </div>
+      <div class="grid grid-cols-3 gap-2">
+        <div>
+          <label class="text-xs text-gray-400">Correct Answer</label>
+          {{ form.correct_answer }}
+        </div>
+        <div>
+          <label class="text-xs text-gray-400">Marks</label>
+          {{ form.marks }}
+        </div>
+        <div>
+          <label class="text-xs text-gray-400">Difficulty</label>
+          {{ form.difficulty }}
+        </div>
+      </div>
+      <div>
+        <label class="text-xs text-gray-400">Explanation (optional)</label>
+        {{ form.explanation }}
+      </div>
+      <div>
+        <label class="text-xs text-gray-400">Tags (comma-separated)</label>
+        {{ form.tags }}
+      </div>
+
+      <div class="pt-2">
+        <button type="submit" class="btn-primary">Save</button>
+        <a href="{% url 'question_list' %}" class="btn-secondary ml-2">Cancel</a>
+      </div>
+    </div>
+  </form>
+</div>

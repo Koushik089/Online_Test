@@ -1,0 +1,196 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Online Exam System - Premium Assessment Platform</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="{% static 'style.css' %}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script>
+    tailwind.config = { darkMode: 'class' }
+  </script>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans min-h-screen relative flex flex-col justify-between overflow-x-hidden selection:bg-blue-700 selection:text-white">
+
+  <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-700/5 blur-[120px] pointer-events-none animate-pulse-slow"></div>
+  <div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-slate-300/5 blur-[120px] pointer-events-none animate-pulse-slow"></div>
+
+  <header class="glass-navbar sticky top-0 w-full z-50">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-700 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-700/20">
+          <i class="fa-solid fa-graduation-cap text-lg"></i>
+        </div>
+        <span class="font-display font-extrabold text-2xl tracking-tight bg-gradient-to-r from-blue-900 via-blue-700 to-blue-600 bg-clip-text text-transparent">Online Exam System</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <button id="themeToggle" class="theme-toggle-btn" aria-label="Toggle Theme">
+          <i class="fa-solid fa-sun text-lg block dark:hidden"></i>
+          <i class="fa-solid fa-moon text-lg hidden dark:block"></i>
+        </button>
+        <a href="{% url 'student_login' %}" class="hidden sm:inline-flex btn-secondary text-sm py-2 px-4">Student Portal</a>
+        <a href="{% url 'signup' %}" class="btn-primary text-sm py-2 px-4">Sign Up</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-grow flex items-center justify-center py-16 px-6 z-10">
+    <div class="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+
+      <div class="lg:col-span-7 space-y-8 text-center lg:text-left">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-700/10 border border-blue-700/20 text-blue-800 text-xs font-semibold uppercase tracking-wider">
+          <span class="flex h-2 w-2 relative">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-700 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-700"></span>
+          </span>
+          Next-Gen Examination Hub
+        </div>
+
+        <h1 class="text-4xl sm:text-6xl font-extrabold font-display leading-[1.1] tracking-tight text-slate-900">
+          Supercharge Your <span class="bg-gradient-to-r from-blue-700 via-blue-600 to-blue-700 bg-clip-text text-transparent">Academic Performance</span>
+        </h1>
+
+        <p class="text-base sm:text-lg text-slate-600 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+          Experience a beautiful, secure, and intuitive evaluation platform. Take real-time exams, track performance, bookmark complex topics, and earn downloadable achievement certificates.
+        </p>
+
+        <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-2">
+          <a href="{% url 'student_login' %}" class="btn-primary text-base py-3.5 px-8">
+            Get Started <i class="fa-solid fa-arrow-right-long ml-2"></i>
+          </a>
+          <a href="#features" class="btn-secondary text-base py-3.5 px-8">Explore Features</a>
+        </div>
+
+        <div class="grid grid-cols-3 gap-6 pt-4 max-w-md mx-auto lg:mx-0">
+          <div class="text-center lg:text-left">
+            <div class="text-3xl font-extrabold text-slate-900">50+</div>
+            <div class="text-xs text-slate-600 font-semibold uppercase tracking-wider mt-1">Prebuilt Questions</div>
+          </div>
+          <div class="text-center lg:text-left border-l border-white/5 pl-4">
+            <div class="text-3xl font-extrabold text-white">3+</div>
+            <div class="text-xs text-gray-500 font-semibold uppercase tracking-wider mt-1">Core Subjects</div>
+          </div>
+          <div class="text-center lg:text-left border-l border-white/5 pl-4">
+            <div class="text-3xl font-extrabold text-white">100%</div>
+            <div class="text-xs text-gray-500 font-semibold uppercase tracking-wider mt-1">Secure & Automated</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="lg:col-span-5 flex justify-center animate-float">
+        <div class="glass-card w-full max-w-sm p-6 space-y-6 glow-border relative overflow-hidden">
+          <div class="absolute -right-12 -top-12 w-28 h-28 bg-gray-500/10 rounded-full blur-2xl"></div>
+          <div class="flex justify-between items-center">
+            <span class="text-xs text-gray-500 font-bold uppercase tracking-wider">Exam Simulator</span>
+            <span class="text-xs text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 font-semibold">Active</span>
+          </div>
+          <div class="space-y-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-300">
+                <i class="fa-solid fa-microchip"></i>
+              </div>
+              <div>
+                <h3 class="font-semibold text-sm text-white">Database Management System</h3>
+                <p class="text-xs text-gray-500 font-medium">10 Questions | 15 Minutes</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-lg bg-gray-500/10 flex items-center justify-center text-gray-300">
+                <i class="fa-solid fa-network-wired"></i>
+              </div>
+              <div>
+                <h3 class="font-semibold text-sm text-white">Computer Networks</h3>
+                <p class="text-xs text-gray-500 font-medium">20 Questions | 30 Minutes</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-gray-400">
+                <i class="fa-solid fa-terminal"></i>
+              </div>
+              <div>
+                <h3 class="font-semibold text-sm text-white">Operating System</h3>
+                <p class="text-xs text-gray-500 font-medium">20 Questions | 30 Minutes</p>
+              </div>
+            </div>
+          </div>
+          <div class="pt-4 border-t border-white/5 flex justify-between items-center text-xs text-gray-400">
+            <span>Includes certificate on pass (>50%)</span>
+            <i class="fa-solid fa-award text-blue-300 text-lg"></i>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <section id="features" class="py-16 px-6 border-t border-white/5 bg-[#1a2030] relative z-10">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center max-w-2xl mx-auto mb-16 space-y-4">
+        <h2 class="text-3xl sm:text-4xl font-extrabold font-display text-white">Engineered for Academic Integrity & Analytics</h2>
+        <p class="text-sm sm:text-base text-gray-500">Equipped with standard browser security layers and real-time dashboard analytics.</p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="glass-card p-6 space-y-4 glass-card-hover">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-blue-500 to-blue-300 flex items-center justify-center text-white">
+            <i class="fa-solid fa-shield-halved text-xl"></i>
+          </div>
+          <h3 class="text-xl font-bold text-white">Strict Proctoring</h3>
+          <p class="text-sm text-gray-500 leading-relaxed">Includes tab switch detection, auto fullscreen lock, keyboard shortcut blocker, copy-paste disable, and an automated warning counter system.</p>
+        </div>
+        <div class="glass-card p-6 space-y-4 glass-card-hover">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-gray-500 to-blue-400 flex items-center justify-center text-white">
+            <i class="fa-solid fa-chart-line text-xl"></i>
+          </div>
+          <h3 class="text-xl font-bold text-white">Performance Insights</h3>
+          <p class="text-sm text-gray-500 leading-relaxed">Beautiful analytics charts visualize subject-wise strengths and attempt histories. Compete globally on the live leaderboard.</p>
+        </div>
+        <div class="glass-card p-6 space-y-4 glass-card-hover">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-blue-400 to-gray-400 flex items-center justify-center text-white">
+            <i class="fa-solid fa-file-pdf text-xl"></i>
+          </div>
+          <h3 class="text-xl font-bold text-white">PDF Verification</h3>
+          <p class="text-sm text-gray-500 leading-relaxed">Instantly download official grade-sheets and passing certificates signed digitally for your academic resume.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="glass-navbar py-8 px-6 text-center text-xs text-gray-500 relative z-10">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+      <p>© 2026 Online Exam System. Designed for Academic Excellence.</p>
+      <div class="flex gap-4">
+        <a href="{% url 'admin_login' %}" class="hover:text-blue-300 transition font-semibold"><i class="fa-solid fa-user-shield mr-1"></i> Admin Portal</a>
+        <span class="text-white/10">|</span>
+        <a href="#" class="hover:text-blue-300 transition">Terms of Service</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const themeToggleBtn = document.getElementById('themeToggle');
+    const htmlElement = document.documentElement;
+    function applyTheme(t) {
+      if (t === 'dark') {
+        htmlElement.setAttribute('data-theme', 'dark');
+        htmlElement.classList.add('dark');
+        htmlElement.classList.remove('light');
+      } else {
+        htmlElement.setAttribute('data-theme', 'light');
+        htmlElement.classList.add('light');
+        htmlElement.classList.remove('dark');
+      }
+    }
+    const stored = localStorage.getItem('theme') || 'light';
+    applyTheme(stored);
+    if (themeToggleBtn) {
+      themeToggleBtn.addEventListener('click', () => {
+        const next = htmlElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('theme', next);
+        applyTheme(next);
+      });
+    }
+  </script>
+</body>
+</html>

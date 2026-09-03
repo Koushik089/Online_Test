@@ -1,0 +1,129 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Create Poll - Admin Control Center</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="{% static 'style.css' %}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    }
+  </script>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans min-h-screen relative flex flex-col justify-between overflow-x-hidden selection:bg-blue-700 selection:text-white">
+
+  <!-- Glow Auras -->
+  <div class="absolute top-[-15%] left-[-15%] w-[60%] h-[60%] rounded-full bg-blue-700/10 blur-[130px] pointer-events-none animate-pulse-slow"></div>
+  <div class="absolute bottom-[-15%] right-[-15%] w-[60%] h-[60%] rounded-full bg-blue-700/5 blur-[130px] pointer-events-none animate-pulse-slow"></div>
+
+  <!-- Header -->
+  <header class="glass-navbar sticky top-0 w-full z-50">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <a href="{% url 'admin_polls' %}" class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-700 to-blue-600 flex items-center justify-center text-white shadow-lg">
+          <i class="fa-solid fa-user-shield"></i>
+        </a>
+        <span class="font-display font-extrabold text-2xl tracking-tight bg-gradient-to-r from-blue-900 via-blue-700 to-blue-600 bg-clip-text text-transparent">Voting Admin</span>
+      </div>
+      
+      <div class="flex items-center gap-4">
+        <button id="themeToggle" class="theme-toggle-btn w-9 h-9" aria-label="Toggle Theme">
+          <i class="fa-solid fa-sun text-sm block dark:hidden"></i>
+          <i class="fa-solid fa-moon text-sm hidden dark:block"></i>
+        </button>
+        <a href="{% url 'admin_polls' %}" class="btn-secondary text-xs py-2 px-4"><i class="fa-solid fa-arrow-left mr-1"></i> Manage Polls</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-grow flex items-center justify-center py-12 px-6 z-10">
+    <div class="max-w-xl w-full">
+      <div class="glass-card p-8 space-y-8 glow-border relative overflow-hidden">
+        <div class="absolute -right-12 -top-12 w-28 h-28 bg-blue-700/15 rounded-full blur-2xl"></div>
+        
+        <div class="text-center space-y-2">
+          <h1 class="text-3xl font-extrabold text-white font-display">Create Election Poll</h1>
+          <p class="text-xs text-gray-500">Configure parameters below to start a new voting ballot.</p>
+        </div>
+
+        {% if messages %}
+          <div class="space-y-2">
+            {% for message in messages %}
+              <div class="p-4 rounded-xl border text-xs sm:text-sm font-semibold bg-rose-500/10 border-rose-500/20 text-rose-400">
+                <span>{{ message }}</span>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        <form method="POST" class="space-y-6">
+          {% csrf_token %}
+          
+          <!-- Title -->
+          <div class="space-y-2">
+            <label class="text-xs font-bold text-gray-400 uppercase tracking-wider block">Election Title</label>
+            <input type="text" name="title" required placeholder="e.g. Student Council President 2026" class="w-full glass-input bg-[#111827] border-white/5 py-3 px-4 text-sm rounded-xl text-gray-300 placeholder-gray-600">
+          </div>
+
+          <!-- Description -->
+          <div class="space-y-2">
+            <label class="text-xs font-bold text-gray-400 uppercase tracking-wider block">Description / Guidelines</label>
+            <textarea name="description" required rows="3" placeholder="Describe the purpose of this election and voting rules..." class="w-full glass-input bg-[#111827] border-white/5 py-3 px-4 text-sm rounded-xl text-gray-300 placeholder-gray-600"></textarea>
+          </div>
+
+          <!-- Candidates -->
+          <div class="space-y-2">
+            <label class="text-xs font-bold text-gray-400 uppercase tracking-wider block">Candidates (Comma-separated)</label>
+            <input type="text" name="candidates" required placeholder="e.g. John Doe, Sarah Jenkins, Michael Chang" class="w-full glass-input bg-[#111827] border-white/5 py-3 px-4 text-sm rounded-xl text-gray-300 placeholder-gray-600">
+            <span class="text-[10px] text-gray-500 block">Enter candidate names separated by commas. Candidates will be registered automatically.</span>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" class="btn-primary w-full py-3.5 bg-gradient-to-tr from-blue-700 to-blue-600 shadow-emerald-500/10">
+            <i class="fa-solid fa-square-plus mr-2"></i>
+            Deploy Election Ballot
+          </button>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="glass-navbar py-8 px-6 text-center text-xs text-gray-500 relative z-10">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+      <p>© 2026 Online Voting Portal. Secure & Transparent.</p>
+      <a href="{% url 'admin_polls' %}" class="hover:underline hover:text-blue-400">Back to Panel</a>
+    </div>
+  <script>
+    const themeToggleBtn = document.getElementById('themeToggle');
+    const htmlElement = document.documentElement;
+    function applyTheme(t) {
+      if (t === 'dark') {
+        htmlElement.setAttribute('data-theme', 'dark');
+        htmlElement.classList.add('dark');
+        htmlElement.classList.remove('light');
+      } else {
+        htmlElement.setAttribute('data-theme', 'light');
+        htmlElement.classList.add('light');
+        htmlElement.classList.remove('dark');
+      }
+    }
+    const stored = localStorage.getItem('theme') || 'light';
+    applyTheme(stored);
+    if (themeToggleBtn) {
+      themeToggleBtn.addEventListener('click', () => {
+        const next = htmlElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('theme', next);
+        applyTheme(next);
+      });
+    }
+  </script>
+</body>
+</html>
