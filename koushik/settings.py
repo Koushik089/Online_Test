@@ -34,6 +34,7 @@ DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = [
     'onlinetest-omega.vercel.app',
+    '.vercel.app',
     'localhost',
     '127.0.0.1',
 ]
@@ -155,10 +156,19 @@ if os.environ.get('POSTGRES_URL'):
 
     try:
         import dj_database_url
+        from urllib.parse import urlparse, urlencode, parse_qs, urlunparse
+
+        _raw_url = os.environ.get('POSTGRES_URL')
+
+        # Strip Supabase/Vercel-specific params psycopg doesn't understand
+        _KNOWN_PARAMS = {'sslmode', 'connect_timeout', 'options'}
+        _parsed = urlparse(_raw_url)
+        _clean_qs = {k: v for k, v in parse_qs(_parsed.query).items() if k in _KNOWN_PARAMS}
+        _clean_url = urlunparse(_parsed._replace(query=urlencode(_clean_qs, doseq=True)))
 
         DATABASES = {
             'default': dj_database_url.parse(
-                os.environ.get('POSTGRES_URL'),
+                _clean_url,
                 conn_max_age=600,
                 ssl_require=True,
             )
