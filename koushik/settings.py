@@ -73,26 +73,30 @@ TEMPLATES = [
 WSGI_APPLICATION = 'koushik.wsgi.application'
 
 
-# Database — SQLite for Vercel, MySQL for local if env vars set
+# Database — SQLite always (Vercel compatible). Use MySQL locally via .env
 if os.environ.get('MYSQL_HOST'):
-    import pymysql
-    pymysql.install_as_MySQLdb()
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': os.environ.get('MYSQL_NAME', 'exam_system_db'),
-            'USER': os.environ.get('MYSQL_USER', 'root'),
-            'PASSWORD': os.environ.get('MYSQL_PASSWORD', ''),
-            'HOST': os.environ.get('MYSQL_HOST', '127.0.0.1'),
-            'PORT': os.environ.get('MYSQL_PORT', '3306'),
-            'OPTIONS': {'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"},
+    try:
+        import pymysql
+        pymysql.install_as_MySQLdb()
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.mysql',
+                'NAME': os.environ.get('MYSQL_NAME', 'exam_system_db'),
+                'USER': os.environ.get('MYSQL_USER', 'root'),
+                'PASSWORD': os.environ.get('MYSQL_PASSWORD', ''),
+                'HOST': os.environ.get('MYSQL_HOST', '127.0.0.1'),
+                'PORT': os.environ.get('MYSQL_PORT', '3306'),
+                'OPTIONS': {'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"},
+            }
         }
-    }
-else:
+    except ImportError:
+        pass
+
+if 'default' not in locals().get('DATABASES', {}):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+            'NAME': '/tmp/db.sqlite3',
         }
     }
 
