@@ -9,22 +9,58 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# ============================================================
+# BASE DIRECTORY
+# ============================================================
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+# ============================================================
+# SECURITY
+# ============================================================
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-ewg!%%1m3dav87cvrbu$bnl^m_ph06o%h&g$u0-u3e&dxuwcku')
+SECRET_KEY = os.environ.get(
+    'SECRET_KEY',
+    'django-insecure-change-this-in-production'
+)
 
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ['*']
+
+# ============================================================
+# ALLOWED HOSTS
+# ============================================================
+
+ALLOWED_HOSTS = [
+    'onlinetest-omega.vercel.app',
+    'localhost',
+    '127.0.0.1',
+]
+
+# Allow all hosts during development
+if DEBUG:
+    ALLOWED_HOSTS = ['*']
 
 
-# Application definition
+# ============================================================
+# CSRF
+# ============================================================
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://onlinetest-omega.vercel.app',
+]
+
+if DEBUG:
+    CSRF_TRUSTED_ORIGINS += [
+        'http://localhost:8000',
+        'http://127.0.0.1:8000',
+    ]
+
+
+# ============================================================
+# APPLICATIONS
+# ============================================================
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -33,13 +69,23 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # Your apps
     'tokio',
     'voting',
 ]
 
+
+# ============================================================
+# MIDDLEWARE
+# ============================================================
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+
+    # WhiteNoise for static files
     'whitenoise.middleware.WhiteNoiseMiddleware',
+
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -53,13 +99,27 @@ MIDDLEWARE = [
 ]
 
 
+# ============================================================
+# URL CONFIGURATION
+# ============================================================
+
 ROOT_URLCONF = 'koushik.urls'
+
+
+# ============================================================
+# TEMPLATES
+# ============================================================
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
+
+        'DIRS': [
+            BASE_DIR / 'templates',
+        ],
+
         'APP_DIRS': True,
+
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.request',
@@ -70,61 +130,137 @@ TEMPLATES = [
     },
 ]
 
+
+# ============================================================
+# WSGI
+# ============================================================
+
 WSGI_APPLICATION = 'koushik.wsgi.application'
 
 
-# Database — SQLite always (Vercel compatible). Use MySQL locally via .env
-if os.environ.get('MYSQL_HOST'):
+# ============================================================
+# DATABASE
+#
+# Production:
+#     Supabase PostgreSQL
+#
+# Local:
+#     MySQL if MYSQL_HOST exists
+#
+# Fallback:
+#     SQLite
+# ============================================================
+
+if os.environ.get('POSTGRES_URL'):
+
+    try:
+        import dj_database_url
+
+        DATABASES = {
+            'default': dj_database_url.parse(
+                os.environ.get('POSTGRES_URL'),
+                conn_max_age=600,
+                ssl_require=True,
+            )
+        }
+
+    except ImportError:
+        raise ImportError(
+            'dj-database-url is required. '
+            'Run: python -m pip install dj-database-url psycopg[binary]'
+        )
+
+
+elif os.environ.get('MYSQL_HOST'):
+
     try:
         import pymysql
+
         pymysql.install_as_MySQLdb()
+
         DATABASES = {
             'default': {
                 'ENGINE': 'django.db.backends.mysql',
-                'NAME': os.environ.get('MYSQL_NAME', 'exam_system_db'),
-                'USER': os.environ.get('MYSQL_USER', 'root'),
-                'PASSWORD': os.environ.get('MYSQL_PASSWORD', ''),
-                'HOST': os.environ.get('MYSQL_HOST', '127.0.0.1'),
-                'PORT': os.environ.get('MYSQL_PORT', '3306'),
-                'OPTIONS': {'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"},
+
+                'NAME': os.environ.get(
+                    'MYSQL_NAME',
+                    'exam_system_db'
+                ),
+
+                'USER': os.environ.get(
+                    'MYSQL_USER',
+                    'root'
+                ),
+
+                'PASSWORD': os.environ.get(
+                    'MYSQL_PASSWORD',
+                    ''
+                ),
+
+                'HOST': os.environ.get(
+                    'MYSQL_HOST',
+                    '127.0.0.1'
+                ),
+
+                'PORT': os.environ.get(
+                    'MYSQL_PORT',
+                    '3306'
+                ),
+
+                'OPTIONS': {
+                    'init_command':
+                        "SET sql_mode='STRICT_TRANS_TABLES'"
+                },
             }
         }
-    except ImportError:
-        pass
 
-if 'default' not in locals().get('DATABASES', {}):
-    import platform
-    DB_PATH = '/tmp/db.sqlite3' if platform.system() == 'Linux' else BASE_DIR / 'db.sqlite3'
+    except ImportError:
+        raise ImportError(
+            'PyMySQL is required for MySQL database.'
+        )
+
+
+else:
+
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': DB_PATH,
+            'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
 
 
-
-# Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
+# ============================================================
+# PASSWORD VALIDATION
+# ============================================================
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        'NAME':
+            'django.contrib.auth.password_validation.'
+            'UserAttributeSimilarityValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'NAME':
+            'django.contrib.auth.password_validation.'
+            'MinimumLengthValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        'NAME':
+            'django.contrib.auth.password_validation.'
+            'CommonPasswordValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        'NAME':
+            'django.contrib.auth.password_validation.'
+            'NumericPasswordValidator',
     },
 ]
 
 
-# Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
+# ============================================================
+# INTERNATIONALIZATION
+# ============================================================
 
 LANGUAGE_CODE = 'en-us'
 
@@ -135,10 +271,10 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
+# ============================================================
+# STATIC FILES
+# ============================================================
 
-# Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
@@ -147,18 +283,71 @@ STATICFILES_DIRS = [
 
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# WhiteNoise compressed static files
+STATICFILES_STORAGE = (
+    'whitenoise.storage.CompressedManifestStaticFilesStorage'
+)
 
 
+# ============================================================
+# EMAIL CONFIGURATION
+# ============================================================
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = (
+    'django.core.mail.backends.smtp.EmailBackend'
+)
+
 EMAIL_HOST = 'smtp.gmail.com'
+
 EMAIL_PORT = 587
+
 EMAIL_USE_TLS = True
 
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+EMAIL_HOST_USER = os.environ.get(
+    'EMAIL_HOST_USER',
+    ''
+)
+
+EMAIL_HOST_PASSWORD = os.environ.get(
+    'EMAIL_HOST_PASSWORD',
+    ''
+)
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
+
+# ============================================================
+# LOGIN
+# ============================================================
+
 LOGIN_URL = '/admin/login/'
+
+
+# ============================================================
+# DEFAULT PRIMARY KEY
+# ============================================================
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# ============================================================
+# PRODUCTION SECURITY
+# ============================================================
+
+if not DEBUG:
+
+    SECURE_PROXY_SSL_HEADER = (
+        'HTTP_X_FORWARDED_PROTO',
+        'https'
+    )
+
+    SESSION_COOKIE_SECURE = True
+
+    CSRF_COOKIE_SECURE = True
+
+    SECURE_BROWSER_XSS_FILTER = True
+
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+
+    X_FRAME_OPTIONS = 'DENY'

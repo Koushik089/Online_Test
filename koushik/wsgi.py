@@ -5,9 +5,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'koushik.settings')
 
 application = get_wsgi_application()
 
-# Run migrations automatically on cold start (needed for Vercel /tmp SQLite)
-import django
-django.setup()
+# Auto-migrate on cold start for Vercel SQLite
 try:
     from django.core.management import call_command
     call_command('migrate', '--run-syncdb', verbosity=0)
