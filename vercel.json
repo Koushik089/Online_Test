@@ -18,6 +18,5 @@
       "src": "/(.*)",
       "dest": "koushik/wsgi.py"
     }
-  ],
-  "installCommand": "pip install django whitenoise python-dotenv"
+  ]
 }
