@@ -1083,20 +1083,23 @@ def student_ai_exam(request):
         # Save generated questions to database
         saved_questions = []
         for q in ai_qs:
-            db_q = Question.objects.create(
-                subject=q['subject'],
-                question_text=q['question_text'],
-                option_a=q['option_a'],
-                option_b=q['option_b'],
-                option_c=q['option_c'],
-                option_d=q['option_d'],
-                correct_answer=q['correct_answer'],
-                difficulty=q['difficulty'],
-                explanation=q['explanation'],
-                tags=q['tags'],
-                marks=q['marks']
-            )
-            saved_questions.append(db_q)
+            try:
+                db_q = Question.objects.create(
+                    subject=q.get('subject', subject),
+                    question_text=q.get('question_text', ''),
+                    option_a=q.get('option_a', ''),
+                    option_b=q.get('option_b', ''),
+                    option_c=q.get('option_c', ''),
+                    option_d=q.get('option_d', ''),
+                    correct_answer=q.get('correct_answer', 'a'),
+                    difficulty=q.get('difficulty', difficulty),
+                    explanation=q.get('explanation', ''),
+                    tags=q.get('tags', ''),
+                    marks=q.get('marks', 1),
+                )
+                saved_questions.append(db_q)
+            except Exception:
+                continue
             
         # Setup Exam Session
         duration = count * 1.5 # 1.5 minutes per question
