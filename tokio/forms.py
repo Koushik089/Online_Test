@@ -6,7 +6,15 @@ class AdminLoginForm(forms.Form):
     password = forms.CharField(label="Password", widget=forms.PasswordInput)
 
 
+SUBJECT_CHOICES = [
+    ('dbms', 'DBMS'),
+    ('computer_network', 'Computer Networks'),
+    ('operating_system', 'Operating Systems'),
+]
+
 class QuestionForm(forms.ModelForm):
+    subject = forms.ChoiceField(choices=SUBJECT_CHOICES)
+
     class Meta:
         model = Question
         fields = ['subject', 'question_text', 'option_a', 'option_b', 'option_c', 'option_d', 'correct_answer', 'marks', 'difficulty', 'explanation', 'tags']
